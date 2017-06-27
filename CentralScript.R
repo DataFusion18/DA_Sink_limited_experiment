@@ -88,6 +88,7 @@ plot.parameter.settings(bic.group1, bic.group2, bic.group3, bic.group4)
 #- Parameter estimates and Analysis of carbon stock dynamics
 # Model run without LA feedback
 result = CBM.grouping(chainLength = 3000, no.param.par.var=c(3), vol.group=list(c(1,2,3),c(4,5,6),7), with.storage=T, model.comparison=F, model.optimization=F)
+# result = CBM.grouping(chainLength = 3000, no.param.par.var=c(3), vol.group=list(7), with.storage=T, model.comparison=F, model.optimization=F)
 
 #- Make figure 4 and 5
 # This script creates the figures and saves those in "output" folder
@@ -104,3 +105,13 @@ source("R/Parameter_sensitivity_shifting_LA.R")
 
 
 #-------------------------------------------------------------------------------------
+# Calculate total C partitioning for individual treatments 
+# and make figure 7 and Table S1
+source("R/C_partitioning.R")
+#-------------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------------
+
+
+

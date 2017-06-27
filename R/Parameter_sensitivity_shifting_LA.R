@@ -127,50 +127,11 @@ title = as.character(c("A","B","C","D","E","F","G","H","I"))
 Cday.data.processed$Date = as.Date(Cday.data.processed$Date)
 Cday.set = subset(Cday.data.processed, volume %in% c(5,1000))
 plot.shift[[1]] = plot.Cday(Cday.set, 1)
-# plot.shift[[1]] = ggplot(data = Cday.set, aes(x = Date, y = carbon_day,  group = volume, colour=factor(volume))) +
-#   geom_point(size=0.01) +
-#   geom_line(data = Cday.set, aes(x = Date, y = carbon_day,  group = volume, colour=factor(volume))) +
-#   # xlab("Month") +
-#   ylab(expression(C[day]~"(g C "*d^"-1"*" "*leafarea^"-1"*")")) + 
-#   # ylab("Cday (g C d-1 leafarea-1)") +
-#   # ggtitle("A - Case 1: An (5L pot -> Free)") +
-#   # scale_colour_discrete(name="Treatments", breaks=c("5", "1000"), labels=c("5L Pot", "Free seedling")) +
-#   scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[1:2]) +
-#   annotate("text", x = min(Cday.set$Date), y = max(Cday.set$carbon_day)*0.98, size = font.size-7, label = paste(title[1])) +
-#   theme_bw() +
-#   theme(legend.position = c(0.85,0.85)) +
-#   # theme(plot.title = element_text(size = font.size)) +
-#   theme(legend.title = element_blank()) +
-#   theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.45), units="line")) +
-#   theme(text = element_text(size=font.size)) +
-#   theme(legend.key.height=unit(0.65,"line")) +
-#   # theme(legend.key.width=unit(2,"line")) +
-#   theme(axis.title.x = element_blank(), axis.text.x=element_blank(), axis.title.y = element_text(size = font.size, vjust=0.3)) +
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-#   theme(plot.title = element_text(vjust=-2))
 
 ######## Plot both set of Rd
 Rd.data.processed$Date = as.Date(Rd.data.processed$Date)
 Rd.data = subset(Rd.data.processed, volume %in% c(5,1000))
 plot.shift[[2]] = plot.Rd(Rd.data, 2)
-# plot.shift[[2]] = ggplot(data = Rd.data, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
-#   geom_point(size=0.01) +
-#   geom_line(data = Rd.data, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
-#   # xlab("Month") +
-#   ylab(expression(R[d]~"(g C "*g^"-1"*" plant "*d^"-1"*")")) + 
-#   # ggtitle("B - Case 2: Rd (5L pot -> Free)") +
-#   scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[2:3]) +
-#   annotate("text", x = min(Rd.data$Date), y = max(Rd.data$Rd_daily)*0.98, size = font.size-7, label = paste(title[2])) +
-#   theme_bw() +
-#   theme(legend.position = c(0.85,0.85)) +
-#   # theme(plot.title = element_text(size = font.size)) +
-#   theme(legend.title = element_blank()) +
-#   theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.2), units="line")) +
-#   theme(text = element_text(size=font.size)) +
-#   theme(legend.key.height=unit(0.65,"line")) +
-#   # theme(legend.key.width=unit(2,"line")) +
-#   theme(axis.title.x = element_blank(), axis.text.x=element_blank(), axis.title.y = element_text(size = font.size, vjust=0.3)) +
-#   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
 
 # Plot individual modelled parameters ("k","Y","af","sf") against "volume"
 summary.param.set = subset(summary.param, variable %in% as.factor(c("af","as","ar")) & volume.group %in% c(1,3))
@@ -203,8 +164,33 @@ plot.shift[[8]] = plot.Mstem(shift.output.Mstem)
 shift.output.Mroot = subset(shift.output,(variable %in% "Mroot"))
 plot.shift[[9]] = plot.Mroot(shift.output.Mroot)
 
-png("output/parameter_shifting.png", units="px", width=2000, height=3000, res=220)
+png("output/Figure_6_parameter_shifting.png", units="px", width=2000, height=3000, res=220)
 lay <- rbind(c(1,7,7),c(2,7,7),c(3,8,8),c(4,8,8),c(5,9,9),c(6,9,9))
 grid.arrange(grobs = plot.shift, layout_matrix = lay)
 dev.off()
+
+#-------------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------------
+# Quantify the changes of final biomasses
+mass.quantify = subset(shift.output, Date %in% as.Date("2013-05-21"))
+keeps = c("variable", "value", "Case")
+mass.quantify = mass.quantify[ , keeps, drop = FALSE]
+mass.quantify = dcast( mass.quantify , variable ~ Case )
+mass.quantify = mass.quantify[1:3,]
+  
+mass.quantify$change.Cday = (mass.quantify[,3] - mass.quantify[,2]) / mass.quantify[,2]
+mass.quantify$change.Rd = (mass.quantify[,4] - mass.quantify[,3]) / mass.quantify[,3]
+mass.quantify$change.alloc = (mass.quantify[,5] - mass.quantify[,4]) / mass.quantify[,4]
+mass.quantify$change.Y = (mass.quantify[,6] - mass.quantify[,5]) / mass.quantify[,5]
+mass.quantify$change.sf = (mass.quantify[,7] - mass.quantify[,6]) / mass.quantify[,6]
+mass.quantify$change.k = (mass.quantify[,8] - mass.quantify[,7]) / mass.quantify[,7]
+
+mass.quantify = mass.quantify[,-c(2:8)]
+write.csv(mass.quantify, file = "output/final_mass_changes.csv", row.names = FALSE)
+#-------------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------------
 

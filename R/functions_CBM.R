@@ -53,8 +53,6 @@ tnc.analysis <- function(carbohydrates,harvest) {
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 # This script calcualtes LogLikelihood to find the most accurate model
-
-# Calcualte LogLi to find the most accurate model
 logLikelihood <- function (data,output,model.comparison) {
   logLi <- matrix(0, nrow=nrow(data), ncol = 1) # Initialising the logLi
   for (i in 1:nrow(data)) {
@@ -183,7 +181,6 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
       
       
       # Calculating the next candidate parameter vector, as a multivariate normal jump away from the current point
-      # c=2
       for (c in (2 : chainLength)) {
         candidatepValues = matrix(ncol = no.var, nrow = no.param)
         for (i in 1:no.var) {
@@ -248,6 +245,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
           
           # Calculating the logarithm of the Metropolis ratio
           logalpha <- (logPrior1+logL1) - (logPrior0+logL0) 
+          
           # Accepting or rejecting the candidate vector
           if ( log(runif(1, min = 0, max =1)) < logalpha && candidatepValues$af[1] + candidatepValues$as[1] <= 1
                && candidatepValues$as[1] >= 0 && candidatepValues$af[1] >= 0) {
@@ -296,7 +294,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
         param.final$af = param.set[(1+2*no.param):(3*no.param)]
         param.final$as = param.set[(1+3*no.param):(4*no.param)]
         param.final$sf = param.set[(1+4*no.param):(5*no.param)]
-        # param.final$ar = 1 - param.final$af - param.final$as
+        
         param.final$k_SD = param.SD[1:no.param]
         param.final$Y_SD = param.SD[(1+no.param):(2*no.param)]
         param.final$af_SD = param.SD[(1+2*no.param):(3*no.param)]
@@ -308,12 +306,11 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
         param.final$af = param.set[(1+no.param):(2*no.param)]
         param.final$as = param.set[(1+2*no.param):(3*no.param)]
         param.final$sf = param.set[(1+3*no.param):(4*no.param)]
-        # param.final$ar = 1 - param.final$af - param.final$as
+        
         param.final$Y_SD = param.SD[1:no.param]
         param.final$af_SD = param.SD[(1+no.param):(2*no.param)]
         param.final$as_SD = param.SD[(1+2*no.param):(3*no.param)]
         param.final$sf_SD = param.SD[(1+3*no.param):(4*no.param)]
-        # # param.final$ar_SD = with(param.final, (af_SD*af_SD + as_SD*as_SD)^0.5)
       }
       
       # Calculate final output set from the predicted parameter set
@@ -438,28 +435,6 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
           melted.error$volume.group = as.factor(2)
         }
         
-        # # Plotting C pools over time for individual volume and No. of parameter
-        # pd <- position_dodge(3) # move the overlapped errorbars horizontally
-        # p1 = ggplot(melted.error, aes(x=Date, y=parameter, colour=variable, group=variable)) +
-        #   geom_errorbar(data = melted.error, aes(ymin=parameter-value, ymax=parameter+value), width=3, size=0.3) +
-        #   geom_line(data = melted.output, aes(x = Date, y = value)) +
-        #   geom_point(shape = 1, size = 0.5) +
-        #   theme_bw() +
-        #   ylab("Plant Carbon pool (gC)") +
-        #   ggtitle(paste("Measured (circles) vs Modelled (lines) C pools for vol",vol[v[j]],"with par",no.param.par.var[z])) +
-        #   scale_colour_discrete(name="C pools",
-        #                         breaks=c("Mleaf_SD","Mleaf.modelled", "Mroot_SD","Mroot.modelled","Mstem_SD","Mstem.modelled","Sleaf_SD","Sleaf.modelled"),
-        #                         labels=c("Mleaf","Mleaf.modelled", "Mroot","Mroot.modelled","Mstem","Mstem.modelled","Sleaf","Sleaf.modelled")) +
-        #   theme(plot.title = element_text(size = 12, face = "bold")) +
-        #   theme(legend.title = element_text(colour="chocolate", size=12, face="bold")) +
-        #   theme(axis.title.x = element_text(size = 12, vjust=-.2)) +
-        #   theme(axis.title.y = element_text(size = 12, vjust=0.3))
-        # # annotate("text", x = melted.output$Date[20], y = max(output$Mstem,na.rm = TRUE), size = 3,
-        # #          label = paste("Mean k = ", round(mean(param.final[,1]), 3), "\nMean Y = ", round(mean(param.final[,2]), 3),
-        # #                        "\nMean af = ", round(mean(param.final[,3]), 3), "\nMean as = ", round(mean(param.final[,4]), 3),
-        # #                        "\nMean ar = ", round(mean(param.final[,7]), 3), "\nMean sf = ",round(mean(param.final[,5]), 3), "\nChain length = ", chainLength-bunr_in))
-        # p1
-        # ggsave(p1,filename=paste("output/Measured_vs_Modelled_Carbon_pools_",v[j],"_vol_",vol[v[j]],"_par_",no.param.par.var[z],".png",sep=""))
         
         # Storing the summary of this volume group of data, outputs, Cstorage (Parameter is same for the group, will be stored later)
         if (j == 1) {
@@ -536,7 +511,6 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
       data = data[with(data, order(volume)), ]
       row.names(data) = c(1:nrow(data))
       aic.bic[q,1] <- logLikelihood(data,output.final1,model.comparison) # Calculate logLikelihood
-      # aic.bic[q,1] <- logLikelihood_without_storage(data,output.final1) # Calculate logLikelihood
       
       k1 = 2 # k = 2 for the usual AIC
       npar = no.param*no.var # npar = total number of parameters in the fitted model
@@ -559,24 +533,14 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
     }
   }
   bic = data.frame(aic.bic[,c("bic","volume.group","no.param","volume")])
-  # obs.l = sapply(bic$volume,length)
-  # bic.final = data.frame(bic=rep(bic$bic,obs.l), volume.group=rep(bic$volume.group,obs.l), volume=as.factor(unlist(bic$volume)))
-  # bic.final$volume.group = rep(1:(nrow(bic.final)/length(vol)), each=length(vol))
-  # write.csv(bic.final, file = "output/processeddata/bic.final_2.csv", row.names = FALSE)
-  # write.csv(summary.param[,c("Date","variable","Parameter","volume.group")], file = "output/processeddata/summary.param.csv", row.names = FALSE)
-  
-  # names(aic.bic) <- c("logLi","aic","bic","time","volume","no.param")
   melted.aic.bic = melt(aic.bic[,c(1:6)], id.vars=c("no.param","volume.group"))
-  # write.csv(melted.aic.bic, file = "output/processeddata/logli_aic_bic_time.csv", row.names = FALSE)
-  
-  # write.csv(aic.bic[,c(1:6)], file = "output/logli_aic_bic.csv", row.names = FALSE)
-  # write.csv(summary.param[ , !(names(summary.param) %in% "volume")], file = "/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata/param_summary_group.csv", row.names = FALSE)
-  # write.csv(summary.output, file = "/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata/output_summary_group.csv", row.names = FALSE)
-  # write.csv(summary.Cstorage, file = "/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata/Cstorage_summary_group.csv", row.names = FALSE)
   
   # if (model.comparison==T | model.optimization==T) {
   if (model.optimization==T) {
     return(bic)
+  } else if (model.optimization==F & with.storage==T) {
+    result = list(no.param.par.var,summary.param,summary.data,summary.output,summary.error,bic,summary.Cstorage)
+    return(result)
   } else {
     result = list(no.param.par.var,summary.param,summary.data,summary.output,summary.error,bic)
     return(result)
@@ -698,7 +662,7 @@ plot.model <- function() {
   w<-dim(img)[2]
   
   #open new file for saving the image in "output" folder
-  png("output/Figure_1.png", width=w, height=h)
+  png("output/Figure_1_CBM.png", width=w, height=h)
   par(mar=c(0,0,0,0), xpd=NA, mgp=c(0,0,0), oma=c(0,0,0,0), ann=F)
   plot.new()
   plot.window(0:1, 0:1)
@@ -759,7 +723,7 @@ plot.with.without.storage <- function(bic.with.storage, bic.without.storage) {
     theme(axis.title.y = element_text(size = 12, vjust=0.3)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   
-  png("output/bic.with.without.storage.1.png", units="px", width=2000, height=1600, res=220)
+  png("output/Figure_2_bic.with.without.storage.png", units="px", width=2000, height=1600, res=220)
   print (p1)
   dev.off()
 }
@@ -819,7 +783,7 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
     theme(axis.title.y = element_text(size = 12, vjust=0.3)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   
-  png("output/bic_treat_group.png", units="px", width=2000, height=1600, res=220)
+  png("output/Figure_3_bic_treat_group.png", units="px", width=2000, height=1600, res=220)
   print (p2)
   dev.off()
 }
@@ -835,10 +799,6 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
 # Plot modelled parameters with 3 Grouped treatments and quadratic parameter setting
 #-------------------------------------------------------------------------------------
 plot.Modelled.parameters <- function(result) { 
-  
-  png("output/Modelled_parameters.png", units="px", width=2500, height=2500, res=250)
-  # png("output/Modelled_parameters.png", width=1024, height=1024)
-  
   i = 0
   font.size = 12
   plot = list() 
@@ -902,6 +862,8 @@ plot.Modelled.parameters <- function(result) {
       }
     }
   }
+  
+  png("output/Figure_4_modelled_parameters.png", units="px", width=2500, height=2500, res=250)
   print (do.call(grid.arrange,  plot))
   dev.off()
 }
@@ -982,7 +944,7 @@ plot.Modelled.biomass <- function(result) {
     }
   }
   
-  png("output/Modelled_biomass.png", units="px", width=2200, height=1600, res=220)
+  png("output/Figure_5_modelled_biomass.png", units="px", width=2200, height=1600, res=220)
   print (do.call(grid.arrange,  plot))
   dev.off()
 }
@@ -1260,7 +1222,145 @@ plot.Mroot <- function(shift.output.Mroot) {
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 
+# ################ Figure 7 #####################
+# # Calculate total C partitioning for individual treatments
+# # # Set working directory for saving figures
+# # setwd("/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata")
+# vol = c(5,10,15,20,25,35,1000)
+# vol_group <- list(c(5,10,15),c(20,25,35),1000)
+# 
+# Ct.group = data.frame(matrix(ncol = 8, nrow = length(vol)))
+# names(Ct.group) = c("GPP","Rgrowth","Rd","Cstorage","Croot","Cstem","Cleaf","Clit")
+# 
+# GPP.data = read.csv("/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/rawdata/GPP.csv")
+# GPP.data = GPP.data[with(GPP.data, order(Date,volume)), ]
+# names(GPP.data)[3] = "GPP"
+# Rd.data = read.csv("/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/rawdata/Rd.csv")
+# Rd.data = Rd.data[with(Rd.data, order(Date,volume)), ]
+# names(Rd.data)[3] = "Rd"
+# Cstorage.data = read.csv("Cstorage_summary_group.csv")
+# Cstorage.data = Cstorage.data[with(Cstorage.data, order(Date,volume)), 1:3]
+# names(Cstorage.data)[1] = "Cstorage"
+# data = merge(GPP.data, Rd.data, by=c("Date","volume"))
+# data = merge(data, Cstorage.data, by=c("Date","volume"))
+# param.summary = read.csv("param_summary_group.csv")
+# output.summary = read.csv("output_summary_group.csv")
+# 
+# cpool = as.factor(c("Mleaf.modelled","Mstem.modelled","Mroot.modelled","Sleaf.modelled"))
+# for (i in 1:length(cpool)) {
+#   cpool.data = subset(output.summary, variable==cpool[i])
+#   cpool.data = cpool.data[, c("Date","value","volume")]
+#   cpool.data = cpool.data[with(cpool.data, order(Date,volume)), ]
+#   names(cpool.data)[2] = as.character(cpool[i])
+#   data = merge(data,cpool.data, all = TRUE)
+# }
+# 
+# # Mleaf.data = subset(output.summary, variable==res[i])
+# # Mleaf.data = Mleaf.data[, c("Date","value","volume")]
+# # Mleaf.data = Mleaf.data[with(Mleaf.data, order(Date,volume)), ]
+# # names(Mleaf.data)[2] = "Mleaf"
+# # data = merge(data,Mleaf.data, all = TRUE)
+# # 
+# # Mstem.data = subset(output.summary, variable==res[2])
+# # Mstem.data = Mstem.data[, c("Date","value","volume")]
+# # Mstem.data = Mstem.data[with(Mstem.data, order(Date,volume)), ]
+# # names(Mstem.data)[2] = "Mstem"
+# # 
+# # Mroot.data = subset(output.summary, variable==res[3])
+# # Mroot.data = Mroot.data[, c("Date","value","volume")]
+# # Mroot.data = Mroot.data[with(Mroot.data, order(Date,volume)), ]
+# # names(Mroot.data)[2] = "Mroot"
+# # 
+# # Sleaf.data = subset(output.summary, variable==res[4])
+# # Sleaf.data = Sleaf.data[, c("Date","value","volume")]
+# # Sleaf.data = Sleaf.data[with(Sleaf.data, order(Date,volume)), ]
+# # names(Sleaf.data)[2] = "Sleaf"
+# 
+# # data = merge(data,Mstem.data, all = TRUE)
+# # data = merge(data,Mroot.data, all = TRUE)
+# # data = merge(data,Sleaf.data, all = TRUE)
+# # data = data[with(data, order(volume,Date)), ]
+# 
+# param = data.frame(matrix(ncol = 3, nrow = nrow(data)))
+# names(param) = c("Date","volume","volume.group")
+# param[,c(1,2)] = data[,c(1,2)]
+# param$volume = as.factor(param$volume)
+# for (i in 1:length(vol_group)) {
+#   for (j in 1:length(vol_group[[i]])) {
+#     param <- within(param, volume.group[volume == vol_group[[i]][j]] <- i)
+#   }
+# }
+# 
+# var = as.factor(c("k","Y","af","as","ar","sf"))
+# for (i in 1:length(var)) {
+#   ind.param = subset(param.summary, variable==var[i])
+#   ind.param = ind.param[, c("Date","Parameter","volume.group")]
+#   names(ind.param)[2] = as.character(var[i])
+#   param <- merge(param,ind.param,by=c("Date","volume.group"))
+# }
+# 
+# # combine data and parameters together
+# data <- merge(data,param,by=c("Date","volume"))
+# data = data[with(data, order(volume,Date)), ]
+# 
+# # v = 1
+# # res = as.factor(c("Mleaf.modelled","Mstem.modelled","Mroot.modelled","Sleaf.modelled"))
+# # # Data processing for different pot volumes (e.g. 5L, 10L, ....., 1000L)
+# # for (v in 1:length(vol)) {
+# #   GPP = subset(GPP.data,(volume %in% vol[v])) # Consider one pot volume at a time to run MCMC on CBM
+# #   names(GPP)[3] = "GPP"
+# #   Rd = subset(Rd.data,(volume %in% vol[v]))
+# #   data = subset(output.summary,(volume %in% vol[v]))
+# #   Mleaf = subset(data, variable==res[1])
+# #   Mstem = subset(data, variable==res[2])
+# #   Mroot = subset(data, variable==res[3])
+# #   Sleaf = subset(data, variable==res[4])
+# # }
+# 
+# dates = as.Date(c("2013-02-21","2013-03-21","2013-04-21","2013-05-21"))
+# data$Date = as.Date(data$Date)
+# for (i in 1:length(dates)) {
+#   data.set = data[data$Date <= dates[i], ]
+#   for (v in 1:length(vol)) {
+#     Ct.group$GPP[v] = sum ( data.set$GPP[which(data.set$volume == vol[v])] )
+#     Ct.group$Rd[v] = sum ( data.set$Rd[which(data.set$volume == vol[v])] * (data.set$Mleaf.modelled[which(data.set$volume == vol[v])] + 
+#                                                                               data.set$Mstem.modelled[which(data.set$volume == vol[v])] + data.set$Mroot.modelled[which(data.set$volume == vol[v])]) )
+#     Ct.group$Cstorage[v] = data.set$Cstorage[which(data.set$volume == vol[v] & data.set$Date == dates[i])]
+#     Ct.group[v, c(5:7)] = data.set[which(data.set$volume == vol[v] & data.set$Date == dates[i]), 8:6] - data.set[which(data.set$volume == vol[v] & data.set$Date == as.Date("2013-01-21")), 6:8]
+#     Ct.group$Clit[v] = sum ( data.set$sf [which(data.set$volume == vol[v])] * data.set$Mleaf.modelled [which(data.set$volume == vol[v])])
+#     Ct.group$Rgrowth[v] = Ct.group$GPP[v] - sum(Ct.group[v,c(3:8)])
+#     # Ct.group$Rgrowth[v] = sum ( (data.set$GPP[which(data.set$volume == vol[v])]) - (data.set$Rd[which(data.set$volume == vol[v])] * (data.set$Mleaf.modelled[which(data.set$volume == vol[v])] + 
+#     #                                                                                                                                 data.set$Mstem.modelled[which(data.set$volume == vol[v])] + data.set$Mroot.modelled[which(data.set$volume == vol[v])])) 
+#     # * (data.set$k [which(data.set$volume == vol[v])] * data.set$Y [which(data.set$volume == vol[v])]) )
+#   }
+#   
+#   Ct.fraction.group = Ct.group[, c(2:8)]
+#   Ct.fraction.group[,] = Ct.fraction.group[,] / Ct.group[, 1] * 100
+#   row.names(Ct.fraction.group) <- c("5L","10L","15L","20L","25L","35L","Free")
+#   
+#   # png(file = "C Partitioning.png")
+#   png(file = paste("C Partitioning_month_",i,".png",sep=""))
+#   par(mfrow = c(1, 1), mar=c(5, 5, 5, 6))
+#   barplot(as.matrix(t(Ct.fraction.group)), main = paste("Accumulated C from",as.Date("2013-01-21"),"to",dates[i]), ylab = "C Partitioning", xlab = "Treatments (Pot size)",  
+#           col = rainbow(20),legend = colnames(Ct.fraction.group),
+#           args.legend = list(x = "topright", bty = "n", inset=c(-0.25, 0)))
+#   dev.off()
+# }
+# plots0 <- lapply(ll <- list.files(patt='.*[.]png'),function(x){
+#   img <- as.raster(readPNG(x))
+#   rasterGrob(img, interpolate = FALSE)
+# })
+# ggsave("Barplot_C_accumulation.pdf", marrangeGrob(grobs=plots0, nrow=2, ncol=2))
+# write.csv(Ct.group, file = "/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata/carbon_allocations.csv", row.names = FALSE)
+# write.csv(Ct.fraction.group, file = "/Users/kashifmahmud/WSU/ARC_project/CBM_Kashif/archive/processeddata/carbon_allocation_fractions.csv", row.names = FALSE)
 
+
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
 
 
 

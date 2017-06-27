@@ -2,18 +2,28 @@
 # Try wide priors
 #-------------------------------------------------------------------------------------
 param.Y <- matrix(c(0.2,0.3,0.4) , nrow=1, ncol=3, byrow=T)
-param.af <- matrix(c(0.2,0.5,1) , nrow=1, ncol=3, byrow=T) # Forcing af not to be negetive
+param.af <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T) # Forcing af not to be negetive
 param.as <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T)
 
-# initialize 'sf' prior differently for grouped treatments
-if (v[[1]]==1 || v[[1]]==2 || v[[1]]==3) {
-  param.sf <- matrix(c(0,0.01,0.02) , nrow=1, ncol=3, byrow=T) # Group 1
-} else if (v[[1]]==4 || v[[1]]==5 || v[[1]]==6) {
-  param.sf <- matrix(c(0,0.005,0.01) , nrow=1, ncol=3, byrow=T) # Group 2
-} else if (v[[1]]==7) {
-  param.sf <- matrix(c(0,0.0025,0.005) , nrow=1, ncol=3, byrow=T) # Free seedling
-}
+param.sf <- matrix(c(0,0.01,0.02) , nrow=1, ncol=3, byrow=T) # All Groups having same sf
 
+# # initialize 'sf' prior differently for grouped treatments
+# if (v[[1]]==1 || v[[1]]==2 || v[[1]]==3) {
+#   param.sf <- matrix(c(0,0.01,0.02) , nrow=1, ncol=3, byrow=T) # Group 1
+# } else if (v[[1]]==4 || v[[1]]==5 || v[[1]]==6) {
+#   param.sf <- matrix(c(0,0.005,0.01) , nrow=1, ncol=3, byrow=T) # Group 2
+# } else if (v[[1]]==7) {
+#   param.sf <- matrix(c(0,0.0025,0.005) , nrow=1, ncol=3, byrow=T) # Free seedling
+# }
+
+# # initialize 'sf' prior differently for grouped treatments
+# if (v[[1]]==1 || v[[1]]==2 || v[[1]]==3) {
+#   param.sf <- matrix(c(0,0.0125,0.025) , nrow=1, ncol=3, byrow=T) # Group 1
+# } else if (v[[1]]==4 || v[[1]]==5 || v[[1]]==6) {
+#   param.sf <- matrix(c(0,0.0075,0.015) , nrow=1, ncol=3, byrow=T) # Group 2
+# } else if (v[[1]]==7) {
+#   param.sf <- matrix(c(0,0.005,0.01) , nrow=1, ncol=3, byrow=T) # Free seedling
+# }
 
 # if (length(vol.group)==1) {
 #   param.sf <- matrix(c(0,0.01,0.02) , nrow=1, ncol=3, byrow=T) # 1 Group
