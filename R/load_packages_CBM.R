@@ -31,8 +31,45 @@ Library(corrplot)
 Library(png)
 Library(grid)
 Library(gridExtra)
-Library(plyr)
+Library(parallel)
+Library(snow)
+# Library(plyr)
 
+
+# Packages from Court's script
+Library(RColorBrewer)
+Library(sciplot)
+Library(reshape)
+Library(nlme)
+Library(visreg)
+Library(multcomp)
+Library(lme4)
+Library(lmerTest)
+Library(plotrix)
+Library(plantecophys)
+Library(scales)
+Library(effects)
+
+# install.packages("lubridate")
+# library(lubridate)
+
+# # Load model packages from Court's script
+# Library(devtools)
+# install_bitbucket("remkoduursma/plantecophys")
+# library(plantecophys)
+# # install.packages("YplantQMC")
+# # install.packages("plantecophys")
+# install_bitbucket("remkoduursma/HIEv")
+# library(HIEv)
+# # install.packages("plantecophys")
+# # install_bitbucket("remkoduursma/plantecophys")
+# # library(plantecophys)
+# install_bitbucket("remkoduursma/optipipe")
+# library(OptiPipe)
+# # install_bitbucket("yplantqmc","remkoduursma", quick=FALSE)
+# install_bitbucket("remkoduursma/yplantqmc")
+# library(YplantQMC)
+# # install.packages("YplantQMC")
 
 #---------------------------------------------------------------------
 #- check if the data and output directories exist. If they don't, create them.

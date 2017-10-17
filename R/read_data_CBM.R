@@ -2,7 +2,9 @@
 #-----------------------------------------------------------------------------------------
 # Import daily GPP, daily Rd data
 GPP.data.processed = read.csv("processed_data/GPP.csv") # Units gC d-1
-Cday.data.processed <- read.csv("raw_data/cday_120_clean_gross.csv") # Unit gC d-1
+# Cday.data.processed <- read.csv("raw_data/cday_120_clean_gross.csv") # Unit gC d-1 # (with constant alpha)
+Cday.data.processed <- read.csv("processed_data/cday_120_clean_gross.csv") # Unit gC d-1 # (with varying alpha)
+
 Rd.data.processed = read.csv("processed_data/Rd.csv") # Unit gC per gC plant per day
 tnc.data.processed = read.csv("processed_data/tnc_fortnightly_data.csv") # Unit gC per gC plant
 
@@ -16,5 +18,6 @@ LA.data.processed = read.csv("processed_data/LA_daily_data.csv") # Unit m^2
 sla.harvest.processed = read.csv("processed_data/sla.harvest.csv") # Unit of SLA = m2 leaf area per gC of leaf biomass
 
 # Import the self shading factors
-sigma.data.processed <- read.csv("raw_data/M_leafarea_model.csv") # Unitless
+# sigma.data.processed <- read.csv("processed_data/M_leafarea_model.csv") # Unitless
+sigma.data.processed <- read.csv("processed_data/M_leafarea_model_prev.csv") # Unitless
 

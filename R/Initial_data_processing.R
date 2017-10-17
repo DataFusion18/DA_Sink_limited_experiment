@@ -14,6 +14,7 @@
 # inputs
 number_of_pots = 7; # number of soil manipulation tests with volumes of 5, 10, 15, 20, 25, 35, Free(1000) Litres
 number_of_plots = 7; # number of replicates
+c1 = 0.48 # unit conversion from gDM to gC: 1 gDM = 0.48 gC
 
 plot.summary = read.csv("raw_data/plot_summary.csv")
 
@@ -100,7 +101,7 @@ for(i in 1:length(vols)) {
   dimnames(hd)[[1]] <- c(1:7, "mean", "SE")
   
   hd$leaf_area <- hd$leaf_area / (100*100) # unit conversion from cm2 to m2
-  hd[,4:ncol(hd)] = hd[,4:ncol(hd)] * 0.48 # Unit conversion: gDM to gC
+  hd[,4:ncol(hd)] = hd[,4:ncol(hd)] * c1 # Unit conversion: gDM to gC
   if (i == 1) {
     hd.final <- hd[0,]
     }
@@ -109,8 +110,8 @@ for(i in 1:length(vols)) {
 }
 dimnames(hd.final)[[1]] <- c(1:7)
 # hd.final$leaf_area <- hd.final$leaf_area / (100*100) # unit conversion from cm2 to m2
-# hd.final$leaf_area = hd.final$leaf_area / 0.48 # Unit conversion: m2 per gDM to m2 per gC of leaf biomass
-# hd.final[,4:ncol(hd.final)] = hd.final[,4:ncol(hd.final)] * 0.48 # Unit conversion: gDM to gC
+# hd.final$leaf_area = hd.final$leaf_area / c1 # Unit conversion: m2 per gDM to m2 per gC of leaf biomass
+# hd.final[,4:ncol(hd.final)] = hd.final[,4:ncol(hd.final)] * c1 # Unit conversion: gDM to gC
 
 
 ################### Calculate leaf area directly from harvest data
@@ -189,12 +190,28 @@ for(i in 1:length(vols)) {
   w_lm = seq (((hd.final$leaf_mass[1] / hd.final$leaf_count[1]) / (hd.final$leaf_mass[i] / hd.final$leaf_count[i])), 1, length.out = 121)
   
   lm.daily[ , i+1] = lc.daily[ , i+1] * hd.final$leaf_mass[i] / hd.final$leaf_count[i] * w_lm
-  # lm.daily[ , i+1] = lm.daily[ , i+1] * 0.48 # Unit connversion = gm of DM from gm of C (multiplying by 0.48)
+  # lm.daily[ , i+1] = lm.daily[ , i+1] * c1 # Unit connversion = gm of DM from gm of C (multiplying by 0.48)
 }
 names(lm.daily)[1:ncol(lm.daily)] <- c("Date", "volume_5", "volume_10", "volume_15", "volume_20", "volume_25", "volume_35", "volume_1000")
 
 lm.daily.melt <- melt(lm.daily, id.vars = "Date")
 names(lm.daily.melt)[2:3] <- c("volume", "leafmass")
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+
+# lm.daily.melt$volume = as.numeric(lm.daily.melt$volume)
+# for(i in length(vols):1) {
+#   ind = which(lm.daily.melt$volume %in% i)
+#   lm.daily.melt$volume[ind] = vols[i]
+# }
+# 
+# lm.daily.melt = merge(lm.daily.melt,lc.daily.melt,by=c("Date","volume"))
+# lm.daily.melt = merge(lm.daily.melt,lc.SE.daily.melt,by=c("Date","volume"))
+# lm.daily.melt$leafmass_SE = lm.daily.melt$leafmass * lm.daily.melt$Leaf_Count_SE / lm.daily.melt$Leaf_Count
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+
 
 # # plot interpolated daily leaf mass from harvest data
 # # png(file = "/Users/kashifmahmud/WSU/ARC_project/CBM/Results/Leaf_mass_daily.png")
@@ -235,6 +252,7 @@ lm.weekly.melt = merge(lm.weekly.melt,lc.weekly.melt,by=c("Date","volume"))
 lm.weekly.melt = merge(lm.weekly.melt,lc.SE.weekly.melt,by=c("Date","volume"))
 lm.weekly.melt$leafmass_SE = lm.weekly.melt$leafmass * lm.weekly.melt$leafcount_SE / lm.weekly.melt$leafcount
 write.csv(lm.weekly.melt[,c("Date","volume","leafmass","leafmass_SE")], file = "processed_data/Cleaf_weekly_data.csv", row.names = FALSE)
+# write.csv(lm.daily.melt[,c("Date","volume","leafmass","leafmass_SE")], file = "processed_data/Cleaf_daily_data.csv", row.names = FALSE)
 #-----------------------------------------------------------------------------------------
 
 
@@ -243,7 +261,6 @@ write.csv(lm.weekly.melt[,c("Date","volume","leafmass","leafmass_SE")], file = "
 ################### Analyse stem height diameter to estimate Stem carbon pool
 # Import weekly height diameter data for 3 months (Diameter is in mm; Height is in cm)
 height.dia <- read.csv("raw_data/height_diameter.csv")
-library(lubridate)
 height.dia$Date <- parse_date_time(height.dia$Date,"d m y")
 height.dia$Date = as.Date(height.dia$Date, format = "%d/%m/%Y")
 height.dia <- merge(plot.summary,height.dia,by=c("pot","plot"))
@@ -273,7 +290,7 @@ for(i in 1:length(vols)) {
 # Fit the model with initial data (10) and harvested data for free seedlings (7)
 # Import initial seedling data
 initial.data <- read.csv("raw_data/seedling_initial.csv")
-initial.data[,c("leaf_mass", "wood_mass", "root_mass")] = initial.data[,c("leaf_mass", "wood_mass", "root_mass")] * 0.48 # unit conversion: gDM to gC 
+initial.data[,c("leaf_mass", "wood_mass", "root_mass")] = initial.data[,c("leaf_mass", "wood_mass", "root_mass")] * c1 # unit conversion: gDM to gC 
 initial.data[nrow(initial.data)+1, 2:ncol(initial.data)] = colMeans(initial.data[2:ncol(initial.data)], na.rm = TRUE) # R7 = Average of leaf data
 initial.data[nrow(initial.data)+1, 2:ncol(initial.data)] = (apply(initial.data[2:ncol(initial.data)], 2, sd, na.rm = TRUE))/(nrow(initial.data)-1)^0.5 # R8 = Standard error
 # initial.data[nrow(initial.data)+1, 2:ncol(initial.data)] = apply(initial.data[2:ncol(initial.data)], 2, sd, na.rm = TRUE) # R8 = Standard deviation of leaf counts
@@ -281,7 +298,7 @@ dimnames(initial.data)[[1]] <- c(1:(nrow(initial.data)-2), "Mean", "SE")
 
 # Import harvested seedling data for all different treatments
 end.data <- read.csv("raw_data/seedling_mass.csv")
-end.data[,4:ncol(end.data)] = end.data[,4:ncol(end.data)] * 0.48 # unit conversion: gDM to gC 
+end.data[,4:ncol(end.data)] = end.data[,4:ncol(end.data)] * c1 # unit conversion: gDM to gC 
 end.data = end.data[ ,c(-1,-2)]
 end.data = end.data[with(end.data, order(volume)), ]
 for(i in 1:length(vols)) {
@@ -392,14 +409,16 @@ write.csv(Croot, file = "processed_data/Croot_twice_data.csv", row.names = FALSE
 ################### Calculate daily GPP
 # Read data
 # finalmass = read.csv("rawdata/harvest_mass_means.csv")
-# finalmass$mass = finalmass$mass * 0.48
-# finalmass$leafarea = finalmass$leafarea / 0.48
+# finalmass$mass = finalmass$mass * c1
+# finalmass$leafarea = finalmass$leafarea / c1
 la.daily.m = la.daily.melt[,1:3] # Leaf area calculated from harvested data
-Cday.data.raw <- read.csv("raw_data/cday_120_clean_gross.csv")
-Cday.data.raw$Date <- as.Date(Cday.data.raw$Date)
+# Cday.data.raw <- read.csv("raw_data/cday_120_clean_gross.csv") # with constant alpha
+Cday.data.processed <- read.csv("processed_data/cday_120_clean_gross.csv") # with varying alpha
+Cday.data.processed$Date <- as.Date(Cday.data.processed$Date)
 
 # Cday with leaf area needs self shading (use slope intercept, from 5-free vol)
-sigma <- read.csv("raw_data/M_leafarea_model.csv")
+# sigma <- read.csv("processed_data/M_leafarea_model.csv")
+sigma <- read.csv("processed_data/M_leafarea_model_prev.csv")
 
 ##function to generate total plant daily C gain-----------------------------------------------------------------------------
 modelledC_func <- function(leafarea, shading, Cday){ #leafarea dfr, self shading dfr, and modelled C gain (gm2)
@@ -416,7 +435,7 @@ modelledC_func <- function(leafarea, shading, Cday){ #leafarea dfr, self shading
 }
 
 ##calculate daily gross C gain
-dailyCgross <- modelledC_func(la.daily.m, sigma, Cday.data.raw)
+dailyCgross <- modelledC_func(la.daily.m, sigma, Cday.data.processed)
 names(dailyCgross)[8] <- "tdc_gross"
 names(dailyCgross)[4] <- "cday_gross"
 
@@ -461,27 +480,35 @@ eucpve_met$time15 <- format(eucpve_met$DateTime15, format='%H:%M:%S')
 eucpve_met1 <- subset(eucpve_met[, 2:4], Date  >= "2013-01-21" & Date  <= "2013-05-21")
 
 #Rdark Q10 equations by volume
-rdarkq10 <- read.csv("raw_data/rdarkq10.csv")
-
+# rdarkq10 <- read.csv("raw_data/rdarkq10.csv")
+# rdark25 <- read.csv("raw_data/rdark_clean.csv")
+rdark <- read.csv("raw_data/rdark_clean_raw.csv")
+rdark.mean <- summaryBy(rd ~ volume, data=rdark, FUN=mean, keep.names=TRUE ) # Mean of all same treatment Rd
+# rdark.mean$rd25 <- rdark.mean$rd * q25_drake^((25-12.5)/10)
+                         
 ### A_model, use temperature data from site to generate daily total leaf dark respiration to enter into the exponential Rd model
 volume <- data.frame(vols)
 A_model <- merge(eucpve_met1, volume)
 names(A_model)[4] <- "volume"
 #need to calculate Rdark through time using rdarkq10 equation by volume
-A_model <- merge(A_model, rdarkq10[,1:2], by="volume")
+# A_model <- merge(A_model, rdarkq10[,1:2], by="volume")
+# A_model <- merge(A_model, rdark25[,1:2], by="volume")
+A_model <- merge(A_model, rdark.mean, by="volume")
 q25_drake <- 1.86
 
 # refit RD (gC m-2 leaf d-1)
 hd.final$sla_harvest = hd.final$leaf_area / hd.final$leaf_mass # calculate harvested SLA (m2 per gC of leaf biomass)
-# hd$leaf_area = hd$leaf_area / 0.48 # Unit conversion: m2 per gDM to m2 per gC of leaf biomass
+# hd$leaf_area = hd$leaf_area / c1 # Unit conversion: m2 per gDM to m2 per gC of leaf biomass
 
 A_model <- merge(A_model, hd.final[,c(1,ncol(hd.final))], by="volume")
-A_model$Rd_daily <- with(A_model, rd12.3 * q25_drake^((temp-12.3)/10) * sla_harvest) # unit (micromol CO2 per gC plant per day)
-with(A_model, plot(temp,Rd_daily, col=volume))
+# A_model$Rd_daily <- with(A_model, rd12.3 * q25_drake^((temp-12.3)/10) * sla_harvest) # unit (micromol CO2 per gC plant per day)
+# A_model$Rd_daily <- with(A_model, rd25_eucs.mean * q25_drake^((temp-25)/10) * sla_harvest) # unit (micromol CO2 per gC plant per day)
+A_model$Rd_daily <- with(A_model, rd * q25_drake^((temp-12.5)/10) * sla_harvest) # unit (micromol CO2 per gC plant per day)
+# with(A_model, plot(temp,Rd_daily, col=volume))
 
 
-Rd <- summaryBy(Rd_daily ~ Date+volume, data=A_model, FUN=sum, keep.names=TRUE ) # Sum of all same day Rd
-Rd$Rd_daily = Rd$Rd_daily / (24*4) # Average of all 96 data from a day
+Rd <- summaryBy(Rd_daily ~ Date+volume, data=A_model, FUN=mean, keep.names=TRUE ) # Sum of all same day Rd and average of all 96 data from a day
+# Rd$Rd_daily = Rd$Rd_daily / (24*4) # Average of all 96 data from a day
 # Rd$Rd_daily = Rd$Rd_daily * (12/44)  # unit conversion from micromol CO2 to gC
 Rd$Rd_daily = Rd$Rd_daily * (3600*24*10^(-6)*12)  # unit conversion from micromol CO2 s-1 to gC d-1
 # Rd$Date <- as.Date(Rd$Date)
@@ -492,20 +519,64 @@ write.csv(Rd, "processed_data/Rd.csv", row.names=FALSE) # unit: gC per gC plant 
 
 #-----------------------------------------------------------------------------------------
 ################### Find plant storage (tnc, fortnightly data) for corresponding Dates (from Court's leaf_data file: represents Gas measurement campaign)
+# keeps <- c("Date", "volume", "starch_mgperg", "sugars_mgperg")
+# tnc.gas = leaf.data[ , keeps, drop = FALSE]
+# names(tnc.gas)[1:2] <- c("Date", "volume")
+# tnc.gas$tnc = tnc.gas$starch_mgperg + tnc.gas$sugars_mgperg
+# 
+# # unit conversion: 1 g tnc has 0.4 gC (12/30) and 1 g plant has 0.48 gC
+# tnc.gas$tnc.C = tnc.gas$tnc * 0.4 / c1 # gC in tnc per gC in plant
+# 
+# keeps <- c("Date", "volume", "tnc.C") # Unit = mg g-1leaf
+# tnc.gas = tnc.gas[ , keeps, drop = FALSE]
+# names(tnc.gas)[3] <- "tnc"
+# 
+# for(i in 1:length(vols)) {
+#   tnc.idn = subset(tnc.gas,volume==vols[i]) 
+#   for(j in 1:length(unique(tnc.idn$Date))) {
+#     tnc.idn.date = subset(tnc.idn, Date == unique(tnc.idn$Date)[j])
+#     tnc.idn.date[nrow(tnc.idn.date)+1, 2:ncol(tnc.idn.date)] = colMeans(tnc.idn.date[2:ncol(tnc.idn.date)], na.rm = TRUE) # R7 = Average of tnc
+#     tnc.idn.date[nrow(tnc.idn.date)+1, 2:ncol(tnc.idn.date)] = (apply(tnc.idn.date[2:ncol(tnc.idn.date)], 2, sd))/(nrow(tnc.idn.date)-1)^0.5 # R8 = Standard error of tnc
+#     # tnc.idn.date[nrow(tnc.idn.date)+1, 2:ncol(tnc.idn.date)] = apply(tnc.idn.date[2:ncol(tnc.idn.date)], 2, sd) # R8 = Standard deviation of tnc
+#     tnc.idn.date$Date = tnc.idn.date[1,1]
+#     dimnames(tnc.idn.date)[[1]] <- c(1:(nrow(tnc.idn.date)-2), "Mean", "SE")
+#     if (i == 1 && j == 1) {
+#       tnc.final <- tnc.idn.date[0,]
+#     }
+#     tnc.final[j+(i-1)*length(unique(tnc.idn$Date)), ] <- tnc.idn.date["Mean", ]
+#     tnc.final$tnc_SE[j+(i-1)*length(unique(tnc.idn$Date))] <- tnc.idn.date["SE", 3]
+#   }
+# }
+# # Unit conversion from (mg g-1leaf) to  (g plant-1)
+# lm.daily.m = lm.daily.melt # Leaf mass (gC) calculated from harvested data
+# lm.daily.m$volume = as.numeric(lm.daily.m$volume)
+# for(i in length(vols):1) {
+#   ind = which(lm.daily.m$volume %in% i)
+#   lm.daily.m$volume[ind] = vols[i]
+# }
+# lm.daily.m$Date = as.Date(lm.daily.m$Date)
+# lm.daily.gas = lm.daily.m[lm.daily.m$Date %in% as.Date(c(unique(tnc.final$Date))), ]
+# # write.csv(lm.daily.gas, file = "processed_data/leafmass_tnc_data.csv", row.names = FALSE)
+# tnc.final$tnc = tnc.final$tnc * lm.daily.gas$leafmass / 1000 # Unit = gC in tnc per gC in plant
+# tnc.final$tnc_SE = tnc.final$tnc_SE * lm.daily.gas$leafmass / 1000 # Unit = gC in tnc per gC in plant
+# write.csv(tnc.final, file = "processed_data/tnc_fortnightly_data.csv", row.names = FALSE)
+
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
 keeps <- c("Date", "volume", "starch_mgperg", "sugars_mgperg")
 tnc.gas = leaf.data[ , keeps, drop = FALSE]
 names(tnc.gas)[1:2] <- c("Date", "volume")
 tnc.gas$tnc = tnc.gas$starch_mgperg + tnc.gas$sugars_mgperg
 
 # unit conversion: 1 g tnc has 0.4 gC (12/30) and 1 g plant has 0.48 gC
-tnc.gas$tnc.C = tnc.gas$tnc * 0.4 / 0.48 # gC in tnc per gC in plant
+tnc.gas$tnc.C = tnc.gas$tnc * 0.4 / c1 # gC in tnc per gC in plant
 
 keeps <- c("Date", "volume", "tnc.C") # Unit = mg g-1leaf
 tnc.gas = tnc.gas[ , keeps, drop = FALSE]
 names(tnc.gas)[3] <- "tnc"
 
 for(i in 1:length(vols)) {
-  tnc.idn = subset(tnc.gas,volume==vols[i]) 
+  tnc.idn = subset(tnc.gas,volume==vols[i])
   for(j in 1:length(unique(tnc.idn$Date))) {
     tnc.idn.date = subset(tnc.idn, Date == unique(tnc.idn$Date)[j])
     tnc.idn.date[nrow(tnc.idn.date)+1, 2:ncol(tnc.idn.date)] = colMeans(tnc.idn.date[2:ncol(tnc.idn.date)], na.rm = TRUE) # R7 = Average of tnc
@@ -520,6 +591,10 @@ for(i in 1:length(vols)) {
     tnc.final$tnc_SE[j+(i-1)*length(unique(tnc.idn$Date))] <- tnc.idn.date["SE", 3]
   }
 }
+names(tnc.final)[c(3:4)] <- c("tnc.conc","tnc.conc_SE")
+tnc.final$tnc.conc = tnc.final$tnc.conc / 1000 # Unit = gC in tnc per gC in leafmass
+tnc.final$tnc.conc_SE = tnc.final$tnc.conc_SE / 1000 # Unit = gC in tnc per gC in leafmass
+
 # Unit conversion from (mg g-1leaf) to  (g plant-1)
 lm.daily.m = lm.daily.melt # Leaf mass (gC) calculated from harvested data
 lm.daily.m$volume = as.numeric(lm.daily.m$volume)
@@ -530,9 +605,14 @@ for(i in length(vols):1) {
 lm.daily.m$Date = as.Date(lm.daily.m$Date)
 lm.daily.gas = lm.daily.m[lm.daily.m$Date %in% as.Date(c(unique(tnc.final$Date))), ]
 # write.csv(lm.daily.gas, file = "processed_data/leafmass_tnc_data.csv", row.names = FALSE)
-tnc.final$tnc = tnc.final$tnc * lm.daily.gas$leafmass / 1000 # Unit = gC in tnc per gC in plant
-tnc.final$tnc_SE = tnc.final$tnc_SE * lm.daily.gas$leafmass / 1000 # Unit = gC in tnc per gC in plant
+tnc.final$tnc = tnc.final$tnc.conc * lm.daily.gas$leafmass # Unit = gC in tnc per gC in plant
+tnc.final$tnc_SE = tnc.final$tnc.conc_SE * lm.daily.gas$leafmass # Unit = gC in tnc per gC in plant
 write.csv(tnc.final, file = "processed_data/tnc_fortnightly_data.csv", row.names = FALSE)
+# write.csv(lm.daily.gas, file = "processed_data/leafmass_tnc_fortnightly_data.csv", row.names = FALSE)
+#-----------------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------------
+
+
 #-----------------------------------------------------------------------------------------
 
 

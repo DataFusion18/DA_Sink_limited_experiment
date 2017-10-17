@@ -3,14 +3,14 @@
 #-------------------------------------------------------------------------------------
 ############## Combining all data in one dataframe
 # Merge all Cday, Rd, Cleaf, Cstem, Croot data
-data = merge(subset(Cday.data.raw,volume %in% c(5,1000)),subset(Rd.data.processed,volume %in% c(5,1000)), all = TRUE)
-data = merge(data,subset(LA.data.processed,volume %in% c(5,1000)), all = TRUE)
-data = merge(data,subset(tnc.data.processed,volume %in% c(5,1000)), all = TRUE)
-data = merge(data,subset(Mleaf.data.processed,volume %in% c(5,1000)), all = TRUE)
-data = merge(data,subset(Mstem.data.processed,volume %in% c(5,1000)), all = TRUE)
-data = merge(data,subset(Mroot.data.processed,volume %in% c(5,1000)), all = TRUE)
+data.set = merge(subset(Cday.data.processed,volume %in% c(5,1000)),subset(Rd.data.processed,volume %in% c(5,1000)), all = TRUE)
+data.set = merge(data.set,subset(LA.data.processed,volume %in% c(5,1000)), all = TRUE)
+data.set = merge(data.set,subset(tnc.data.processed[,c("Date","volume","tnc","tnc_SE")],volume %in% c(5,1000)), all = TRUE)
+data.set = merge(data.set,subset(Mleaf.data.processed,volume %in% c(5,1000)), all = TRUE)
+data.set = merge(data.set,subset(Mstem.data.processed,volume %in% c(5,1000)), all = TRUE)
+data.set = merge(data.set,subset(Mroot.data.processed,volume %in% c(5,1000)), all = TRUE)
 # names(data)[4:ncol(data)] = c("Rd","Sleaf","Sleaf_SD","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot","Mroot_SD")
-names(data)[3:ncol(data)] = c("Cday","Rd","LA","LA_SD","Sleaf","Sleaf_SD","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot","Mroot_SD")
+names(data.set)[3:ncol(data.set)] = c("Cday","Rd","LA","LA_SD","Sleaf","Sleaf_SD","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot","Mroot_SD")
 # data[ , c(9:ncol(data))] = data[ , c(9:ncol(data))] * 0.65 # Unit conversion: gDM to gC
 
 
@@ -22,17 +22,17 @@ names(data)[3:ncol(data)] = c("Cday","Rd","LA","LA_SD","Sleaf","Sleaf_SD","Mleaf
 ##################------------------------------
 # Consider everything (Cday, LA, Rd, sigma, parameters) for potted seedling 5L (group 1)
 q=0 # Case 0
-Cday.data = subset(Cday.data.processed,volume==5) # Consider the free seedling to test the parameter sensitivity
-Rd.data = subset(Rd.data.processed,volume==5)
-Mleaf.data = subset(Mleaf.data.processed,volume==5)
-Mstem.data = subset(Mstem.data.processed,volume==5)
-Mroot.data = subset(Mroot.data.processed,volume==5)
-Sleaf.data = tnc.data = subset(tnc.data.processed,volume==5)
-LA.data = subset(LA.data.processed,volume==5)
-sigma.data = subset(sigma.data.processed,volume==5)
+Cday.data.set = subset(Cday.data.processed,volume==5) # Consider the free seedling to test the parameter sensitivity
+Rd.data.set = subset(Rd.data.processed,volume==5)
+Mleaf.data.set = subset(Mleaf.data.processed,volume==5)
+Mstem.data.set = subset(Mstem.data.processed,volume==5)
+Mroot.data.set = subset(Mroot.data.processed,volume==5)
+Sleaf.data.set = tnc.data = subset(tnc.data.processed,volume==5)
+LA.data.set = subset(LA.data.processed,volume==5)
+sigma.data.set = subset(sigma.data.processed,volume==5)
 
 sla.harvest.data = subset(sla.harvest.processed,volume %in% 5)
-sigma.data$SLA = sla.harvest.data$sla_no_tnc
+sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
 
 summary.param = result[[2]]
 param = subset(summary.param,(volume.group %in% 1)) # volume.group = 1 is for potted seedling 5L
@@ -43,7 +43,8 @@ param.casted = dcast( param , Date ~ variable )
 
 # Set the colours for the graph (colourblind friendly palette)
 # cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00")
+# cbPalette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00")
+# cbPalette = c("gray", "orange", "skyblue", "black", "yellow", "vermilion", "reddishpurple")
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -52,7 +53,7 @@ source("R/CBM_model_shift.R")
 # Take the Cday for free seedling
 q=1 # Case 1
 # Raw data processing for free seedling only (1000L)
-Cday.data = subset(Cday.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
+Cday.data.set = subset(Cday.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -60,7 +61,7 @@ source("R/CBM_model_shift.R")
 ##################------------------------------
 # Take the Cday, Rd for free seedling
 q=2 # Case 2
-Rd.data = subset(Rd.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
+Rd.data.set = subset(Rd.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -76,7 +77,7 @@ param = param[ , keeps, drop = FALSE]
 param.casted = dcast( param , Date ~ variable )
 
 sla.harvest.data = subset(sla.harvest.processed,volume %in% 1000)
-sigma.data$SLA = sla.harvest.data$sla_no_tnc
+sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -130,8 +131,8 @@ plot.shift[[1]] = plot.Cday(Cday.set, 1)
 
 ######## Plot both set of Rd
 Rd.data.processed$Date = as.Date(Rd.data.processed$Date)
-Rd.data = subset(Rd.data.processed, volume %in% c(5,1000))
-plot.shift[[2]] = plot.Rd(Rd.data, 2)
+Rd.set = subset(Rd.data.processed, volume %in% c(5,1000))
+plot.shift[[2]] = plot.Rd(Rd.set, 2)
 
 # Plot individual modelled parameters ("k","Y","af","sf") against "volume"
 summary.param.set = subset(summary.param, variable %in% as.factor(c("af","as","ar")) & volume.group %in% c(1,3))

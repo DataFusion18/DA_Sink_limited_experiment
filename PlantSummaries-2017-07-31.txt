@@ -1,0 +1,34 @@
+Plant summary results  - produced with YplantQMC.
+
+  LA           -  Total leaf area (m2)
+  meanleafsize -  Mean leaf size (cm2)
+  nleavesp     -  Number of leaves
+  leaflen      -  Mean leaf length (cm)
+  meanleafang  -  Mean leaf angle (deg)
+  wmeanleafang -  Mean leaf angle weighted by leaf area (deg)
+  Xellipsoid   -  Ellipsoidal leaf angle dist. par.
+  crownvol     -  Crown volume (convex hull) (m3)
+  crownsurf    -  Crown surface area (convex hull) (m2)
+  ALAC         -  Crown density (AL/AC) (m2 m-2)
+  cw           -  Crown width (m)
+  cl           -  Crown length (m)
+  htot         -  Total height (m)
+  cshape       -  Crown shape index (-)
+  stemsurf     -  Stem + branch surface area (cm2)
+  stemvol      -  Stem + branch volume (cm3)
+  stemdiam     -  Stem base diameter (mm)
+  meanpath     -  Mean pipe length (mm)
+  sdpath       -  Standard deviation of pipe length (mm)
+  totlen       -  Total woody segment length (mm)
+  Ek           -  Expected distance to 5 nearest leaves (no edge corr.)
+  Ek2          -  Expected distance to 5 nearest leaves (with edge corr.)
+  Ok           -  Observed distance to 5 nearest leaves
+  disp         -  Dispersion parameter (no edge corr.)
+  disp2        -  Dispersion parameter (with edge corr.)
+
+
+
+
+pfile	lfile	crownvol	crownsurf	crownproj	nleavesp	leaflen	meanleafang	wmeanleafang	Xellipsoid	Ek	Ek2	Ok	disp	disp2	stemsurf	stemvol	stemdiam	meanpath	sdpath	totlen	cw	cl	htot	cshape	LA	meanleafsize	STARbar	ALAC
+yplant/euc_plfiles/euchae3.p	yplant/euc_plfiles/euchae.l	0.041341407939874	0.72791880079814	0.109728302316904	34	11.4967647058824	69.2941176470588	70.8964435404268	0.573998362486147	0.0950034178993768	0.103182894204097	0.102234123452137	1.07610995175372	0.99080496084861	6.1436985933602	0.0153592464834005	0.1	NA	NA	1582.9	0.480720664495788	0.684519932705216	0.512520123720475	2.21209638605257	0.0877642719450339	25.8130211603041	NA	0.120568766528359
+yplant/euc_plfiles/euchae1.p	yplant/euc_plfiles/euchae.l	0.0067269344312239	0.203318895240933	0.049171023751977	15	8.18	69.1333333333333	72.8733096698766	0.624962521701044	0.0681311563196821	0.0755595014790933	0.0864598435893778	1.2690206398919	1.14426169967917	3.07247761521082	0.00768119403802705	0.1	NA	NA	689.5	0.311747195763494	0.260057356017366	0.264513813177087	2.5078759048465	0.0191619533926815	12.774635595121	NA	0.0942458071591163

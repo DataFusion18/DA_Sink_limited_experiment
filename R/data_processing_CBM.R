@@ -25,9 +25,14 @@ names(data)[4:ncol(data)] = c("Rd","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot"
 #-------------------------------------------------------------------------------------
 if (with.storage==T) {
   Sleaf.data = tnc.data = subset(tnc.data.processed,(volume %in% vol[v]))
-data = merge(data,Sleaf.data, all = TRUE)
-names(data)[4:ncol(data)] = c("Rd","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot","Mroot_SD","Sleaf","Sleaf_SD")
+  keeps <- c("Date", "volume", "tnc", "tnc_SE")
+  Sleaf.data = Sleaf.data[ , keeps, drop = FALSE]
+  
+  data = merge(data,Sleaf.data, all = TRUE)
+  names(data)[4:ncol(data)] = c("Rd","Mleaf","Mleaf_SD","Mstem","Mstem_SD","Mroot","Mroot_SD","Sleaf","Sleaf_SD")
 # data = data[with(data, order(volume)), ]
 # row.names(data) = c(1:nrow(data))
 }
+
+# write.csv(lm.daily.melt[,c("Date","volume","leafmass","leafmass_SE")], file = "processed_data/Cleaf_daily_data.csv", row.names = FALSE)
 #-------------------------------------------------------------------------------------

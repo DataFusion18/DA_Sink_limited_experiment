@@ -2,10 +2,10 @@
 
 # Calculating model outputs
 Mleaf = Mstem = Mroot = LA = c()
-Mleaf[1] <- Mleaf.data$leafmass[1]
-Mstem[1] <- Mstem.data$stemmass[1]
-Mroot[1] <- Mroot.data$rootmass[1]
-LA[1] <- data$LA[1]
+Mleaf[1] <- Mleaf.data.set$leafmass[1]
+Mstem[1] <- Mstem.data.set$stemmass[1]
+Mroot[1] <- Mroot.data.set$rootmass[1]
+LA[1] <- data.set$LA[1]
 
 k=param.casted$k; Y=param.casted$Y; af=param.casted$af; as=param.casted$as; ar=param.casted$ar; sf=param.casted$sf
 GPP = Cstorage = Sleaf = Sstem = Sroot = M = c()
@@ -32,10 +32,10 @@ Croot[1] <- Mroot[1] - Sroot[1]
 
 # LA[1] <- LA.data$LA[1]
 
-for (i in 2:nrow(Cday.data)) {
-  M[i-1] <- sigma.data$b * LA[i-1] + sigma.data$intercept
-  GPP[i-1] <- LA[i-1] * Cday.data$carbon_day[i-1] * M[i-1] # calculate total daily C gain with self shading
-  Cstorage[i] <- Cstorage[i-1] + GPP[i-1] - Rd.data$Rd_daily[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1]) - k[i-1]*Cstorage[i-1]
+for (i in 2:nrow(Cday.data.set)) {
+  M[i-1] <- sigma.data.set$b * LA[i-1] + sigma.data.set$intercept
+  GPP[i-1] <- LA[i-1] * Cday.data.set$carbon_day[i-1] * M[i-1] # calculate total daily C gain with self shading
+  Cstorage[i] <- Cstorage[i-1] + GPP[i-1] - Rd.data.set$Rd_daily[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1]) - k[i-1]*Cstorage[i-1]
   
   # Cstorage[i] <- Cstorage[i-1] + GPP.data$GPP[i-1] - Rd[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1]) - k[i-1]*Cstorage[i-1]
   Sleaf[i] <- Cstorage[i] * 0.75 # 75% of storage goes to leaf (Duan's experiment)
@@ -53,12 +53,12 @@ for (i in 2:nrow(Cday.data)) {
   # Leaf area (t) = Leaf area (T) * Leaf count (t) / Leaf count (T); t = time, T = time of harvest
   # LA[i] <- ((leaf.data$final_LA / leaf.data$final_LM) * Mleaf[i] + (leaf.data$initial_LA / leaf.data$initial_LM) * Mleaf[i])/2 
   # LA[i] <- hd.final$SLA[which(hd.final$volume == 5)] * Mleaf[i]
-  LA[i] <- sigma.data$SLA * Cleaf[i]
+  LA[i] <- sigma.data.set$SLA * Cleaf[i]
 }
 output.final = data.frame(Cstorage,Mleaf,Mstem,Mroot,Sleaf)
 
 # Plant Carbon pools for various parameter sensitivity
-output.final$Date = Cday.data$Date
+output.final$Date = Cday.data.set$Date
 names(output.final) = c("Cstorage","Mleaf","Mstem","Mroot","Sleaf","Date")
 melted.output = melt(output.final[,c("Mleaf","Mstem","Mroot","Cstorage","Sleaf","Date")], id.vars="Date")
 melted.Cstorage = output.final[,c("Cstorage","Date")]

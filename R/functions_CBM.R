@@ -18,7 +18,7 @@ tnc.analysis <- function(carbohydrates,harvest) {
   
   # unit conversion from g of tnc per g of dry weight biomass to gC in tnc per gC in plant biomass
   # 1 g of tnc has 0.4 gC and 1 g of dry weight biomass has 0.48 gC
-  carbohydrates$tnc = carbohydrates$tnc * (0.4/0.48) # Unit = gC in tnc / gC in plant biomass
+  carbohydrates$tnc = carbohydrates$tnc * (0.4/c1) # Unit = gC in tnc / gC in plant biomass
   #-----------------------------------------------------------------------------------------
   ##### Total TNC calculation considering tree organ biomass partitioning
   # harvest = read.csv("raw_data/Duan_harvest.csv")
@@ -38,7 +38,7 @@ tnc.analysis <- function(carbohydrates,harvest) {
   tnc$leaf_to_all = tnc$total.leaf.tnc.C / (tnc$total.leaf.tnc.C + tnc$total.stem.tnc.C + tnc$total.root.tnc.C) * 100 # Unit = %
   tnc$stem_to_all = tnc$total.stem.tnc.C / (tnc$total.leaf.tnc.C + tnc$total.stem.tnc.C + tnc$total.root.tnc.C) * 100 # Unit = %
   tnc$root_to_all = tnc$total.root.tnc.C / (tnc$total.leaf.tnc.C + tnc$total.stem.tnc.C + tnc$total.root.tnc.C) * 100 # Unit = %
-   
+  
   tnc[nrow(tnc)+1, ] = colMeans(tnc, na.rm = TRUE) # R7 = Average of data
   tnc[nrow(tnc)+1, ] = apply(tnc, 2, sd) # R8 = Standard deviation of data
   dimnames(tnc)[[1]] <- c(1:6, "mean", "SD")
@@ -93,6 +93,8 @@ logLikelihood <- function (data,output,model.comparison) {
 #-------------------------------------------------------------------------------------
 CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage, model.comparison, model.optimization) {
   
+  source("R/load_packages_CBM.R")
+  
   # Assign inputs for MCMC
   bunr_in = chainLength * 0.1 # Discard the first 10% iterations for Burn-IN in MCMC (According to Oijen, 2008)
   if (with.storage==T) {
@@ -102,7 +104,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
   }
   
   # Assign pot volumes and number of parameters per varible in temporal scale
-  vol = unique(Cday.data.raw$volume)[order(unique(Cday.data.raw$volume))] # Assign all treatment pot volumes
+  vol = unique(Cday.data.processed$volume)[order(unique(Cday.data.processed$volume))] # Assign all treatment pot volumes
   
   param.mean = data.frame(matrix(ncol = no.var+1, nrow = length(no.param.par.var)*length(vol.group)))
   if (with.storage==T) {
@@ -118,7 +120,10 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
                     time.taken=numeric(length(no.param.par.var)*length(vol.group)))
   
   q = 0 # Indicates the iteration number
-  
+  # set.seed(3)
+  set.seed(15) # final seed for reproducible results
+  # set.seed(18) 
+
   # Start the iteration for different treatment group and number of parameters
   for (v1 in 1:length(vol.group)) {
     v = unlist(vol.group[v1])
@@ -156,7 +161,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
         Mroot[1] <- data.set$Mroot[1]
         
         if (with.storage==T) {
-          output.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,pValues$Y,pValues$k,pValues$af,pValues$as,pValues$sf)
+          output.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,tnc,pValues$Y,pValues$k,pValues$af,pValues$as,pValues$sf)
         } else {
           output.set = model.without.storage(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,pValues$Y,pValues$af,pValues$as,pValues$sf)
         }
@@ -224,7 +229,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
             
             
             if (with.storage==T) {
-              out.cand.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,candidatepValues$Y,
+              out.cand.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,tnc,candidatepValues$Y,
                                    candidatepValues$k,candidatepValues$af,candidatepValues$as,candidatepValues$sf)
             } else {
               out.cand.set = model.without.storage(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,candidatepValues$Y,
@@ -322,7 +327,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
         Mroot[1] <- data.set$Mroot[1]
         
         if (with.storage==T) {
-          output.final.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,param.final$Y,
+          output.final.set = model(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,tnc,param.final$Y,
                                    param.final$k,param.final$af,param.final$as,param.final$sf)
         } else {
           output.final.set = model.without.storage(data.set$GPP,data.set$Rd,no.param,Mleaf,Mstem,Mroot,param.final$Y,
@@ -337,6 +342,12 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
           output.final = rbind(output.final,output.final.set)
         }
       }
+      
+      # #----------------------------------------------------------------------------------------------------------------
+      # if (with.storage==T) {
+      #   output.final$Sleaf = output.final$Sleaf / output.final$Mleaf * 100
+      # }
+      # #----------------------------------------------------------------------------------------------------------------
       
       # Calculate daily parameter values with SD
       Days <- seq(1,nrow(data.set), length.out=nrow(data.set))
@@ -385,8 +396,22 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
       
       
       # Plotting the Measured (data) vs Modelled Plant Carbon pools for plotting and comparison
+      #----------------------------------------------------------------------------------------------------------------
+      # lm.daily = read.csv("processed_data/Cleaf_daily_data.csv") # Unit gC per gC plant
+      #----------------------------------------------------------------------------------------------------------------
+      
       for (j in 1:length(v)) {
         data.set = subset(data,(volume %in% vol[v[j]]))
+        
+        #----------------------------------------------------------------------------------------------------------------
+        # leafmass.daily = subset(lm.daily,(volume %in% vol[v[j]]))
+        # leafmass.daily$Date = as.Date(leafmass.daily$Date)
+        # # leafmass.daily.gas = leafmass.daily[leafmass.daily$Date %in% c(unique(as.Date(tnc.data.processed$Date))), ]
+        # # browser()
+        # data.set$Sleaf = data.set$Sleaf / leafmass.daily$leafmass * 100
+        # data.set$Sleaf_SD = ((data.set$Sleaf_SD*data.set$Sleaf_SD + leafmass.daily$leafmass_SE*leafmass.daily$leafmass_SE)/2)^0.5 / leafmass.daily$leafmass * 100
+        #----------------------------------------------------------------------------------------------------------------
+        
         output.final.set = subset(output.final,(volume %in% vol[v[j]]))
         output.final.set$Date = data.set$Date
         
@@ -480,7 +505,6 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
         }
       }
       
-      
       # Display the Acceptance rate of the chain
       nAccepted = length(unique(pChain[,1]))
       acceptance = (paste("Volume =",vol[v],", Total Parameter number =",no.param.par.var[z],": ", nAccepted, "out of ", chainLength-bunr_in, "candidates accepted ( = ",
@@ -500,7 +524,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
       # title(main = paste("First day Parameter iterations for volume group",v1,"with par",no.param.par.var[z]), outer=TRUE, cex = 1.5)
       # dev.off()
       
-      # Calcualte LogLi, AIC, BIC, Time to find the most accurate model for best balance between model fit and complexity
+      # Calculate LogLi, AIC, BIC, Time to find the most accurate model for best balance between model fit and complexity
       output.final1 = output.final
       if (with.storage==T) { 
         names(output.final1) = c("Cstorage","Mleaf","Mstem","Mroot","Sleaf","volume") # Rename for the logLikelihood function
@@ -562,7 +586,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
 # various temporal scales to estimate Carbon pools (Cstorage,Cleaf,Cstem,Croot)
 #-----------------------------------------------------------------------------------------
 # Defining the model to iteratively calculate Cstorage, Cleaf, Cstem, Croot, Sleaf, Sstem, Sroot
-model <- function (GPP,Rd,no.param,Mleaf,Mstem,Mroot,Y,k,af,as,sf) {
+model <- function (GPP,Rd,no.param,Mleaf,Mstem,Mroot,tnc,Y,k,af,as,sf) {
   Cstorage = Sleaf = Sstem = Sroot = c()
   
   # From Duan's experiment for TNC partitioning to tree organs
@@ -638,9 +662,9 @@ model.without.storage <- function (GPP,Rd,no.param,Mleaf,Mstem,Mroot,Y,af,as,sf)
       sf.i = sf[1]+ sf[2]*i + sf[3]*i*i
     }
     
-    Mleaf[i] <- Mleaf[i-1] + GPP[i-1]*af.i*(1-Y.i) - sf.i*Mleaf[i-1]
-    Mstem[i] <- Mstem[i-1] + GPP[i-1]*as.i*(1-Y.i)
-    Mroot[i] <- Mroot[i-1] + GPP[i-1]*(1-af.i-as.i)*(1-Y.i)
+    Mleaf[i] <- Mleaf[i-1] + (GPP[i-1] - Rd[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1])) * af.i*(1-Y.i) - sf.i*Mleaf[i-1]
+    Mstem[i] <- Mstem[i-1] + (GPP[i-1] - Rd[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1])) * as.i*(1-Y.i)
+    Mroot[i] <- Mroot[i-1] + (GPP[i-1] - Rd[i-1]*(Mleaf[i-1] + Mroot[i-1] + Mstem[i-1])) * (1-af.i-as.i)*(1-Y.i)
   }
   output = data.frame(Mleaf,Mstem,Mroot)
   return(output)
@@ -689,43 +713,75 @@ plot.with.without.storage <- function(bic.with.storage, bic.without.storage) {
   keeps = c("bic", "volume.group", "no.param")
   bic.with.storage = bic.with.storage[ , keeps, drop = FALSE]
   bic.without.storage = bic.without.storage[ , keeps, drop = FALSE]
-  bic = data.frame(bic.without.storage$bic, bic.with.storage$bic, bic.with.storage$volume.group, bic.with.storage$no.param)
-  names(bic)[1:4] <- c("without storage", "with storage", "Treatment", "no.param")
-  bic$Group = ifelse(bic$Treatment==1,"Group 1",ifelse(bic$Treatment==2,"Group 2","Group 3"))
-  bic$Group = as.factor(bic$Group)
-  bic$Parameter.setting = ifelse(bic$no.param==1,"Constant",ifelse(bic$no.param==2,"Linear","Quadratic"))
-  bic$Parameter.setting = as.factor(bic$Parameter.setting)
+  bic.with.storage.sub = subset(bic.with.storage, no.param %in% 3)
+  bic.without.storage.sub = subset(bic.without.storage, no.param %in% 3)
+  bic = data.frame(bic.without.storage.sub$bic, bic.with.storage.sub$bic, bic.with.storage.sub$volume.group)
+  names(bic)[1:3] <- c("without storage", "with storage", "Treatment")
+  bic$Group = ifelse(bic$Treatment==1,"Small",ifelse(bic$Treatment==2,"Large","Free"))
+  bic$Group = factor(bic$Group, levels = bic$Group[c(1,2,3)])
   
-  keeps = c("without storage", "with storage", "Group", "Parameter.setting")
+  keeps = c("without storage", "with storage", "Group")
   bic = bic[ , keeps, drop = FALSE]
-  bic.melt <- melt(bic, id.vars = c("Group", "Parameter.setting"))
-  names(bic.melt)[3:4] <- c("Model_setting", "BIC")
-  #-------------------------------------------------------------------------------------
+  bic.melt <- melt(bic, id.vars = "Group")
+  names(bic.melt)[3] <- "BIC"
   
-  #-------------------------------------------------------------------------------------
-  p1 = ggplot(data = bic.melt, aes(x = Parameter.setting, y = BIC, group = Model_setting, fill = Model_setting)) +
+  p1 = ggplot(data = bic.melt, aes(x = Group, y = BIC, group = variable, fill = variable)) +
     # ggplot(data = bic.melt, aes(x=factor(bic.melt$Treatment, levels=unique(as.character(bic.melt$Treatment))), y=BIC, fill = Model_setting)) +
     geom_bar(stat="identity", width = 0.5, position = "dodge") +
-    facet_grid(. ~ Group) +
-    scale_fill_brewer(palette = "Set1", name = "Model setting") +
-    xlab("Parameter setting") +
+    scale_fill_brewer(palette = "Set1", name = "") +
     ylab("BIC") +
-    # ggtitle("BIC for various model settings") +
     theme_bw() +
-    # theme(plot.title = element_text(size = 12)) +
     theme(legend.title = element_text(colour="black", size=10)) +
     theme(legend.text = element_text(colour="black", size=10)) +
-    theme(legend.position = c(0.85,0.8)) +
+    theme(legend.position = c(0.75,0.82)) +
     theme(legend.key.height=unit(1,"line")) +
     theme(legend.key = element_blank()) +
     theme(text = element_text(size=12)) +
-    theme(axis.title.x = element_text(size = 12, vjust=-.2)) +
+    theme(axis.title.x = element_blank()) +
     theme(axis.title.y = element_text(size = 12, vjust=0.3)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   
-  png("output/Figure_2_bic.with.without.storage.png", units="px", width=2000, height=1600, res=220)
+  png("output/Figure_2_bic.with.without.storage.png", units="px", width=800, height=600, res=220)
   print (p1)
   dev.off()
+  
+  # bic = data.frame(bic.without.storage$bic, bic.with.storage$bic, bic.with.storage$volume.group, bic.with.storage$no.param)
+  # names(bic)[1:4] <- c("without storage", "with storage", "Treatment", "no.param")
+  # bic$Group = ifelse(bic$Treatment==1,"Group 1",ifelse(bic$Treatment==2,"Group 2","Group 3"))
+  # bic$Group = as.factor(bic$Group)
+  # bic$Parameter.setting = ifelse(bic$no.param==1,"Constant",ifelse(bic$no.param==2,"Linear","Quadratic"))
+  # bic$Parameter.setting = as.factor(bic$Parameter.setting)
+  
+  # keeps = c("without storage", "with storage", "Group", "Parameter.setting")
+  # bic = bic[ , keeps, drop = FALSE]
+  # bic.melt <- melt(bic, id.vars = c("Group", "Parameter.setting"))
+  # names(bic.melt)[3:4] <- c("Model_setting", "BIC")
+  #-------------------------------------------------------------------------------------
+  
+  #-------------------------------------------------------------------------------------
+  # p1 = ggplot(data = bic.melt, aes(x = Parameter.setting, y = BIC, group = Model_setting, fill = Model_setting)) +
+  #   # ggplot(data = bic.melt, aes(x=factor(bic.melt$Treatment, levels=unique(as.character(bic.melt$Treatment))), y=BIC, fill = Model_setting)) +
+  #   geom_bar(stat="identity", width = 0.5, position = "dodge") +
+  #   facet_grid(. ~ Group) +
+  #   scale_fill_brewer(palette = "Set1", name = "Model setting") +
+  #   xlab("Parameter setting") +
+  #   ylab("BIC") +
+  #   # ggtitle("BIC for various model settings") +
+  #   theme_bw() +
+  #   # theme(plot.title = element_text(size = 12)) +
+  #   theme(legend.title = element_text(colour="black", size=10)) +
+  #   theme(legend.text = element_text(colour="black", size=10)) +
+  #   theme(legend.position = c(0.85,0.8)) +
+  #   theme(legend.key.height=unit(1,"line")) +
+  #   theme(legend.key = element_blank()) +
+  #   theme(text = element_text(size=12)) +
+  #   theme(axis.title.x = element_text(size = 12, vjust=-.2)) +
+  #   theme(axis.title.y = element_text(size = 12, vjust=0.3)) +
+  #   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  # 
+  # png("output/Figure_2_bic.with.without.storage.png", units="px", width=2000, height=1600, res=220)
+  # print (p1)
+  # dev.off()
 }
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
@@ -737,7 +793,9 @@ plot.with.without.storage <- function(bic.with.storage, bic.without.storage) {
 ################ Figure 3 #####################
 # Plot Model Measures ("bic") against "Treatment groupings" and "number of parameters"
 #-------------------------------------------------------------------------------------
+# cbPalette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00")
 plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.group4) { 
+  cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
   bic.group = bic.group1[rep(rownames(bic.group1), length(bic.group1$volume[[1]])), ]
   bic.group = bic.group[with(bic.group, order(no.param)), ]
   bic.group$volume = unlist(bic.group1$volume)
@@ -763,7 +821,7 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
   #-------------------------------------------------------------------------------------
   
   #-------------------------------------------------------------------------------------
-  pd <- position_dodge(0.1)
+  pd <- position_dodge(0.3)
   p2 = ggplot(data = bic.group, aes(x = factor(bic.group$volume, levels=unique(as.character(bic.group$volume)) ), y = bic, group = interaction(volume.group,no.param), colour=factor(volume.group), shape=factor(no.param))) +
     geom_line(position=pd, data = bic.group, aes(x = factor(bic.group$volume, levels=unique(as.character(bic.group$volume)) ), y = bic, group = interaction(volume.group,no.param), colour=factor(volume.group), linetype=factor(no.param))) +
     geom_point(position=pd, size=2) +
@@ -772,6 +830,7 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
     scale_y_continuous(name="BIC",limits = c(0, round_any(max(bic.group$bic), 50, f = ceiling)), breaks=seq(0,round_any(max(bic.group$bic), 50, f = ceiling),250)) +
     scale_x_discrete(name="Treatment", breaks=c("5", "10", "15", "20", "25", "35", "1000"),
                      labels=c("5L", "10L", "15L", "20L", "25L", "35L", "1000L")) +
+    scale_color_manual(breaks = c("1", "2", "3", "4"), values=cbPalette[1:4]) +
     theme_bw() +
     theme(legend.title = element_text(colour="black", size=10)) +
     theme(legend.text = element_text(colour="black", size=10)) +
@@ -783,7 +842,7 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
     theme(axis.title.y = element_text(size = 12, vjust=0.3)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
   
-  png("output/Figure_3_bic_treat_group.png", units="px", width=2000, height=1600, res=220)
+  png("output/Figure_3_bic_treat_group.png", units="px", width=1500, height=1200, res=220)
   print (p2)
   dev.off()
 }
@@ -799,6 +858,7 @@ plot.parameter.settings <- function(bic.group1, bic.group2, bic.group3, bic.grou
 # Plot modelled parameters with 3 Grouped treatments and quadratic parameter setting
 #-------------------------------------------------------------------------------------
 plot.Modelled.parameters <- function(result) { 
+  cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
   i = 0
   font.size = 12
   plot = list() 
@@ -820,16 +880,18 @@ plot.Modelled.parameters <- function(result) {
       plot[[i]] = ggplot(data = summary.param.set, aes(x = Date, y = Parameter,  group = volume.group, colour=factor(volume.group))) +
         geom_ribbon(data = summary.param.set, aes(ymin=Parameter-Parameter_SD, ymax=Parameter+Parameter_SD), linetype=2, alpha=0.1,size=0.1) +
         geom_point(position=pd,size=0.01) +
-        geom_line(position=pd,data = summary.param.set, aes(x = Date, y = Parameter,  group = volume.group, colour=factor(volume.group))) +
-        ylab(paste(as.character(var[p]),"(fraction)")) +
+        geom_line(position=pd,data = summary.param.set, aes(x = Date, y = Parameter,  group = volume.group, colour=factor(volume.group)),size=1) +
+        # ylab(paste(as.character(var[p]),"(fraction)")) +
+        ylab(paste(as.character(var[p]))) +
         labs(colour="Treatment Group") +
+        scale_color_manual(breaks = c("1", "2", "3"), values=cbPalette[2:4]) +
         scale_y_continuous(limits = c(min(summary.param.set.limit$Parameter)-2*max(summary.param.set.limit$Parameter_SD),
                                       max(summary.param.set.limit$Parameter)+2*max(summary.param.set.limit$Parameter_SD))) +
         annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter) + 2*max(summary.param.set$Parameter_SD), size = font.size-7, label = paste(title[p])) +
         theme_bw() +
         theme(legend.title = element_text(colour="black", size=font.size)) +
-        theme(legend.text = element_text(colour="black", size=font.size)) +
-        theme(legend.position = c(0.3,0.15)) +
+        theme(legend.text = element_text(colour="black", size=font.size-1)) +
+        theme(legend.position = c(0.22,0.18)) +
         theme(legend.key = element_blank()) +
         theme(text = element_text(size=font.size)) +
         theme(axis.title.x = element_blank()) +
@@ -837,25 +899,25 @@ plot.Modelled.parameters <- function(result) {
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
       
       if (p==1) {
-        plot[[i]] = plot[[i]] + scale_colour_discrete(name="Treatment group",
-                                                      breaks=c("1", "2", "3"),
-                                                      labels=c("Group 1 = 5, 10 and 15 L", "Group 2 = 20, 25 and 35 L", "Group 3 = Free seedling")) +
+        plot[[i]] = plot[[i]] + scale_colour_manual(name="", breaks=c("1", "2", "3"),
+                                                      labels=c("Small", "Large", "Free"), values=cbPalette[2:4]) +
           ylab(expression(k~"(g C "*g^"-1"*" C "*d^"-1"*")"))
-        plot[[i]] = plot[[i]] + theme(legend.key.height=unit(0.9,"line"))
+        plot[[i]] = plot[[i]] + theme(legend.key.height=unit(0.7,"line"))
       } else if (p>1) {
         plot[[i]] = plot[[i]] + guides(colour=FALSE)
       } 
       if (p==2) {
-        plot[[i]] = plot[[i]] + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1.2), units="line"))
+        plot[[i]] = plot[[i]] + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 0.8), units="line"))
       }
       if (p==3) {
-        plot[[i]] = plot[[i]] + ylab(expression(a[f]~"(fraction)")) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
+        # plot[[i]] = plot[[i]] + ylab(expression(a[f]~"(fraction)")) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
+        plot[[i]] = plot[[i]] + ylab(expression(a[f])) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
       }
       if (p==4) {
-        plot[[i]] = plot[[i]] + ylab(expression(a[s]~"(fraction)")) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
+        plot[[i]] = plot[[i]] + ylab(expression(a[w])) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
       }
       if (p==5) {
-        plot[[i]] = plot[[i]] + ylab(expression(a[r]~"(fraction)")) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
+        plot[[i]] = plot[[i]] + ylab(expression(a[r])) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
       }
       if (p==6) {
         plot[[i]] = plot[[i]] + ylab(expression(s[f]~"(g C "*g^"-1"*" C "*d^"-1"*")"))
@@ -863,7 +925,7 @@ plot.Modelled.parameters <- function(result) {
     }
   }
   
-  png("output/Figure_4_modelled_parameters.png", units="px", width=2500, height=2500, res=250)
+  png("output/Figure_4_modelled_parameters.png", units="px", width=2000, height=2000, res=250)
   print (do.call(grid.arrange,  plot))
   dev.off()
 }
@@ -879,6 +941,7 @@ plot.Modelled.parameters <- function(result) {
 # Plot Daily analysis (lines) with optimum parameter setting and intermittent observations (symbols) of selected carbon stocks
 #-------------------------------------------------------------------------------------
 plot.Modelled.biomass <- function(result) { 
+  cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
   i = 0
   font.size = 12
   plot = list() 
@@ -909,15 +972,16 @@ plot.Modelled.biomass <- function(result) {
       # labs(colour="Soil Volume", linetype="Grouping treatment", size="Total No of Parameter") +
       # labs(colour="Pot Volume (L)", linetype="No. of Parameters") +
       labs(colour="Pot Volume (L)") +
+      scale_color_manual(breaks=c("5","10","15","20","25","35","1000"), values=cbPalette[1:7]) +
       # scale_color_manual(labels = c("Individuals", "One Group"), values = c("blue", "red")) +
       # coord_trans(y = "log10") + ylab(paste(as.character(meas[p]),"(g C plant-1)")) +
       theme_bw() +
-      annotate("text", x = min(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-7, label = paste(title[p])) +
+      annotate("text", x = max(summary.output.Cpool$Date), y = min(summary.output.Cpool$value), size = font.size-7, label = paste(title[p])) +
       # theme(plot.title = element_text(size = 20, face = "bold")) +
       theme(legend.title = element_text(colour="black", size=font.size)) +
-      theme(legend.text = element_text(colour="black", size = font.size)) +
+      theme(legend.text = element_text(colour="black", size = font.size-1)) +
       # theme(legend.key.height=unit(0.9,"line")) +
-      theme(legend.position = c(0.17,0.7)) +
+      theme(legend.position = c(0.18,0.73)) +
       theme(legend.key = element_blank()) +
       theme(text = element_text(size=font.size)) +
       theme(axis.title.x = element_blank()) +
@@ -926,27 +990,96 @@ plot.Modelled.biomass <- function(result) {
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
     
     if (p==1) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(M[leaf]~"(g C "*plant^"-1"*")")) +
-        scale_colour_discrete(name="Treatments", breaks=c("5","10","15","20","25","35","1000"),
-                              labels=c("5 L", "10 L", "15 L", "20 L", "25 L", "35 L", "Free seedling"))
-      plot[[i]] = plot[[i]]  + theme(legend.key.height=unit(0.8,"line"))
+      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,f"]~"(g C "*plant^"-1"*")")) +
+        scale_colour_manual(name="Treatments", breaks=c("5","10","15","20","25","35","1000"),
+                              labels=c("5 L", "10 L", "15 L", "20 L", "25 L", "35 L", "FS"), values=cbPalette[1:7])
+      plot[[i]] = plot[[i]]  + theme(legend.key.height=unit(0.7,"line"))
       
     } else if (p==2) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(M[stem]~"(g C "*plant^"-1"*")"))
+      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,w"]~"(g C "*plant^"-1"*")"))
       plot[[i]] = plot[[i]] + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 0.75), units="line"))
     } else if (p==3) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20,40),labels=c(.5,1,2,5,10,20,40)) + ylab(expression(M[root]~"(g C "*plant^"-1"*")"))
+      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20,40),labels=c(.5,1,2,5,10,20,40)) + ylab(expression(C["t,r"]~"(g C "*plant^"-1"*")"))
     } else {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.05,.1,.2,.5,1,2),labels=c(.05,.1,.2,.5,1,2)) + ylab(expression(S[leaf]~"(g C "*plant^"-1"*")"))
+      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.05,.1,.2,.5,1,2),labels=c(.05,.1,.2,.5,1,2)) + ylab(expression(C["n,f"]~"(g C "*plant^"-1"*")"))
     }
     if (p>1) {
       plot[[i]] = plot[[i]] + guides(colour=FALSE)
     }
+    
+    # #----------------------------------------------------------------------------------------------------------------
+    # # keeps <- c("Date", "volume", "tnc.conc", "tnc.conc_SE")
+    # # tnc.data = tnc.data.processed[ , keeps, drop = FALSE]
+    # 
+    # if (p == 4) {
+    #   plot[[i]] = ggplot(summary.error.Cpool, aes(x=Date, y=parameter, group = volume, colour=volume)) +
+    #     geom_point(position=pd) +
+    #     geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=2) +
+    #     geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = volume, colour=volume)) +
+    #     ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
+    #     labs(colour="Pot Volume (L)") +
+    #     theme_bw() +
+    #     annotate("text", x = min(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-7, label = paste(title[p])) +
+    #     theme(legend.title = element_text(colour="black", size=font.size)) +
+    #     theme(legend.text = element_text(colour="black", size = font.size)) +
+    #     theme(legend.position = c(0.17,0.7)) +
+    #     theme(legend.key = element_blank()) +
+    #     theme(text = element_text(size=font.size)) +
+    #     theme(axis.title.x = element_blank()) +
+    #     theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+    #     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+    #     ylab(expression(S[leaf]~"(% of"~M[leaf]~")")) + guides(colour=FALSE)
+    # }
+    # #----------------------------------------------------------------------------------------------------------------
+    
   }
   
-  png("output/Figure_5_modelled_biomass.png", units="px", width=2200, height=1600, res=220)
+  png("output/Figure_5_modelled_biomass.png", units="px", width=1600, height=1300, res=220)
   print (do.call(grid.arrange,  plot))
   dev.off()
+  
+  # # #----------------------------------------------------------------------------------------------------------------
+  # # # Represent Sleaf as a concentration of Mleaf instead of total mass
+  # if (p == 4) {
+  #   summary.output.Mleaf = subset(summary.output,variable %in% "Mleaf.modelled")
+  #   summary.output.Sleaf = subset(summary.output,variable %in% "Sleaf.modelled")
+  #   summary.error.Sleaf = subset(summary.error,variable %in% "Sleaf_SD")
+  #   summary.output.Sleaf$value = summary.output.Sleaf$value / summary.output.Mleaf$value * 100
+  #   summary.output.Sleaf = summary.output.Sleaf[,-c(5,6)]
+  #   
+  #   # summary.error.Sleaf$value = summary.error.Sleaf$value / lm.daily.m$leafmass * 100
+  #   leafmass.daily = read.csv("processed_data/Cleaf_daily_data.csv") # Unit gC per gC plant
+  #   leafmass.daily = leafmass.daily[with(leafmass.daily, order(volume,Date)), ]
+  #   summary.error.Sleaf$value = ((summary.error.Sleaf$value*summary.error.Sleaf$value + leafmass.daily$leafmass_SE*leafmass.daily$leafmass_SE)/2)^0.5 / lm.daily.m$leafmass * 100
+  #   summary.error.Sleaf$parameter = summary.error.Sleaf$parameter / lm.daily.m$leafmass * 100
+  #   summary.error.Sleaf = summary.error.Sleaf[,-c(6,7)]
+  #   
+  #   pd <- position_dodge(4) # move the overlapped errorbars horizontally
+  #   plot[[i]] = ggplot(summary.error.Sleaf, aes(x=Date, y=parameter, group = volume, colour=volume)) +
+  #     geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=0.2) +
+  #     geom_line(position=pd,data = summary.output.Sleaf, aes(x = Date, y = value, group = volume, colour=volume)) +
+  #     geom_point(position=pd) +
+  #     # ylab("Sleaf (g C)") + xlab("Month") +
+  #     ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
+  #     labs(colour="Pot Volume (L)") +
+  #     theme_bw() +
+  #     annotate("text", x = min(summary.output.Sleaf$Date), y = max(summary.output.Sleaf$value), size = font.size-7, label = paste(title[p])) +
+  #     theme(legend.title = element_text(colour="black", size=font.size)) +
+  #     theme(legend.text = element_text(colour="black", size = font.size)) +
+  #     theme(legend.position = c(0.17,0.7)) +
+  #     theme(legend.key = element_blank()) +
+  #     theme(text = element_text(size=font.size)) +
+  #     theme(axis.title.x = element_blank()) +
+  #     theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+  #     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  #     ylab(expression(S[leaf]~"(% of"~M[leaf]~")")) + guides(colour=FALSE)
+  # }
+  # 
+  # png("output/Figure_5_modelled_biomass_Sleaf_conc.png", units="px", width=2200, height=1600, res=220)
+  # print (do.call(grid.arrange,  plot))
+  # dev.off()
+  # # #----------------------------------------------------------------------------------------------------------------
+  
 }
 
 #----------------------------------------------------------------------------------------------------------------
@@ -956,7 +1089,9 @@ plot.Modelled.biomass <- function(result) {
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 ################ Figure 6A #####################
-# Function to gerenate plot for growth respiration rate (Y) 
+# Function to gerenate plot for Daily net C assimilation per unit leaf area (Cday) 
+# cbPalette = c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00")
+# cbPalette = c("gray", "orange", "skyblue", "black", "yellow", "vermilion", "reddishpurple")
 plot.Cday <- function(Cday.set, iteration) { 
   ggplot(data = Cday.set, aes(x = Date, y = carbon_day,  group = volume, colour=factor(volume))) +
     geom_point(size=0.01) +
@@ -967,7 +1102,7 @@ plot.Cday <- function(Cday.set, iteration) {
     theme_bw() +
     theme(legend.position = c(0.85,0.85)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.45), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.55), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.65,"line")) +
     # theme(legend.key.width=unit(2,"line")) +
@@ -983,21 +1118,22 @@ plot.Cday <- function(Cday.set, iteration) {
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 ################ Figure 6B #####################
-# Function to gerenate plot for growth respiration rate (Y) 
-plot.Rd <- function(Rd.data, iteration) { 
-  plot.shift[[2]] = ggplot(data = Rd.data, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
+# Function to gerenate plot for Day respiration rate (Rd)
+plot.Rd <- function(Rd.set, iteration) { 
+  plot.shift[[2]] = ggplot(data = Rd.set, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
     geom_point(size=0.01) +
-    geom_line(data = Rd.data, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
+    geom_line(data = Rd.set, aes(x = Date, y = Rd_daily,  group = volume, colour=factor(volume))) +
     # xlab("Month") +
     ylab(expression(R[d]~"(g C "*g^"-1"*" plant "*d^"-1"*")")) + 
     # ggtitle("B - Case 2: Rd (5L pot -> Free)") +
     scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[2:3]) +
-    annotate("text", x = min(Rd.data$Date), y = max(Rd.data$Rd_daily)*0.98, size = font.size-7, label = paste(title[2])) +
+    # scale_y_continuous(limits = c(min(summary.param.set$Parameter), max(summary.param.set$Parameter)), breaks=c(.005,.01,.015),labels=c(.005,.01,.015)) +
+    annotate("text", x = min(Rd.set$Date), y = max(Rd.set$Rd_daily)*0.98, size = font.size-7, label = paste(title[2])) +
     theme_bw() +
     theme(legend.position = c(0.85,0.85)) +
     # theme(plot.title = element_text(size = font.size)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.2), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.65,"line")) +
     # theme(legend.key.width=unit(2,"line")) +
@@ -1023,14 +1159,14 @@ plot.allocation.fractions <- function(summary.param.set, iteration) {
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
     scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
     # scale_linetype_manual(values=c("solid","dashes", "dotted")) +
-    scale_linetype_manual(breaks=c("af","as","ar"), labels=c(expression(a[f]),expression(a[s]),expression(a[r])),values=c(19,17,15)) +
+    scale_linetype_manual(breaks=c("af","as","ar"), labels=c(expression(a[f]),expression(a[w]),expression(a[r])),values=c(19,17,15)) +
     scale_y_continuous(name=expression(Allocations~"(g C "*g^"-1"*" C "*d^"-1"*")"),limits = c(0,0.9), breaks=seq(0,1,0.2)) +
     annotate("text", x = min(summary.param.set$Date), y = 0.86, size = font.size-7, label = paste(title[iteration])) +
     theme_bw() +
-    theme(legend.position = c(0.5,0.85),legend.direction = "vertical",legend.box = "horizontal") +
+    theme(legend.position = c(0.47,0.83),legend.direction = "vertical",legend.box = "horizontal") +
     # theme(plot.title = element_text(size = font.size)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.85), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 1), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.75,"line")) +
     theme(legend.key.width=unit(2,"line")) +
@@ -1058,10 +1194,10 @@ plot.Y <- function(summary.param.set, iteration) {
     annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter)*1.04, size = font.size-7, label = paste(title[iteration])) +
     ylab(expression(Y~"(g C "*g^"-1"*" C "*d^"-1"*")")) +
     theme_bw() +
-    theme(legend.position = c(0.85,0.65)) +
+    theme(legend.position = c(0.85,0.55)) +
     # theme(plot.title = element_text(size = font.size)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.5), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.65), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.75,"line")) +
     # theme(legend.key.width=unit(3,"line")) +
@@ -1085,14 +1221,15 @@ plot.sf <- function(summary.param.set, iteration) {
     # xlab("Month") +
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
     scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    # scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05), breaks=c(.005,.007,.009),labels=c(.005,.007,.009)) +
     scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05)) +
     annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter)*1.04, size = font.size-7, label = paste(title[iteration])) +
     ylab(expression(s[f]~"(g C "*g^"-1"*" C "*d^"-1"*")")) +
     theme_bw() +
-    theme(legend.position = c(0.85,0.65)) +
+    theme(legend.position = c(0.85,0.2)) +
     # theme(plot.title = element_text(size = font.size)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.5), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0, 0.3), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.75,"line")) +
     # theme(legend.key.width=unit(3,"line")) +
@@ -1123,7 +1260,7 @@ plot.k <- function(summary.param.set, iteration) {
     theme(legend.position = c(0.85,0.85)) +
     # theme(plot.title = element_text(size = font.size)) +
     theme(legend.title = element_blank()) +
-    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0.25, 0.5), units="line")) +
+    theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.25, 0.25, 0.65), units="line")) +
     theme(text = element_text(size=font.size)) +
     theme(legend.key.height=unit(0.75,"line")) +
     # theme(legend.key.width=unit(3,"line")) +
@@ -1143,13 +1280,13 @@ plot.Mleaf <- function(shift.output.Mleaf) {
   ggplot() +
     geom_line(data = shift.output.Mleaf, aes(x = Date, y = value, group = Case, colour=Case), size=1) +
     geom_point(size=2) +
-    ylab(expression("Leaf mass"~"(g C "*plant^"-1"*")")) + 
+    ylab(expression("Foliage mass"~"(g C "*plant^"-1"*")")) + 
     annotate("text", x = min(shift.output.Mleaf$Date), y = max(shift.output.Mleaf$value), size = font.size-7, label = paste(title[7])) +
     scale_colour_manual(breaks=c("0","1","2","3","4","5","6"), labels=c("Baseline (5L)","+ Cday of FS",expression(+ R[d]~"of FS"),
-                                                                        expression(+ (a[f] + a[s] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
+                                                                        expression(+ (a[f] + a[w] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
                         values=cbPalette) +
     theme_bw() +
-    theme(legend.position = c(0.2,0.75),legend.text.align = 0) +
+    theme(legend.position = c(0.2,0.7),legend.text.align = 0) +
     theme(legend.title = element_blank()) +
     theme(legend.key = element_blank()) +
     theme(text = element_text(size=font.size+2)) +
@@ -1171,13 +1308,13 @@ plot.Mstem <- function(shift.output.Mstem) {
   ggplot() +
     geom_line(data = shift.output.Mstem, aes(x = Date, y = value, group = Case, colour=Case), size=1) +
     geom_point(size=2) +
-    ylab(expression("Stem mass"~"(g C "*plant^"-1"*")")) + 
+    ylab(expression("Wood mass"~"(g C "*plant^"-1"*")")) + 
     scale_colour_manual(breaks=c("0","1","2","3","4","5","6"), labels=c("Baseline (5L)","+ Cday of FS",expression(+ R[d]~"of FS"),
-                                                                        expression(+ (a[f] + a[s] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
+                                                                        expression(+ (a[f] + a[w] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
                         values=cbPalette) +
     annotate("text", x = min(shift.output.Mstem$Date), y = max(shift.output.Mstem$value), size = font.size-7, label = paste(title[8])) +
     theme_bw() +
-    theme(legend.position = c(0.2,0.75),legend.text.align = 0) +
+    theme(legend.position = c(0.2,0.7),legend.text.align = 0) +
     theme(legend.title = element_blank()) +
     theme(legend.key = element_blank()) +
     theme(text = element_text(size=font.size+2)) +
@@ -1201,11 +1338,11 @@ plot.Mroot <- function(shift.output.Mroot) {
     geom_point(size=2) +
     ylab(expression("Root mass"~"(g C "*plant^"-1"*")")) + 
     scale_colour_manual(breaks=c("0","1","2","3","4","5","6"), labels=c("Baseline (5L)","+ Cday of FS",expression(+ R[d]~"of FS"),
-                                                                        expression(+ (a[f] + a[s] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
+                                                                        expression(+ (a[f] + a[w] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
                         values=cbPalette) +
     annotate("text", x = min(shift.output.Mroot$Date), y = max(shift.output.Mroot$value), size = font.size-7, label = paste(title[9])) +
     theme_bw() +
-    theme(legend.position = c(0.2,0.75),legend.text.align = 0) +
+    theme(legend.position = c(0.2,0.7),legend.text.align = 0) +
     theme(legend.title = element_blank()) +
     theme(legend.key = element_blank()) +
     theme(text = element_text(size=font.size+2)) +

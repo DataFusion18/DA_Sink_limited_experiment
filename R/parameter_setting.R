@@ -4,8 +4,13 @@
 param.Y <- matrix(c(0.2,0.3,0.4) , nrow=1, ncol=3, byrow=T)
 param.af <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T) # Forcing af not to be negetive
 param.as <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T)
+param.sf <- matrix(c(0,0.005,0.01) , nrow=1, ncol=3, byrow=T) # All Groups having same sf
 
-param.sf <- matrix(c(0,0.01,0.02) , nrow=1, ncol=3, byrow=T) # All Groups having same sf
+# # wide ranges (didn't work)
+# param.Y <- matrix(c(0,0.3,1) , nrow=1, ncol=3, byrow=T)
+# param.af <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T) # Forcing af not to be negetive
+# param.as <- matrix(c(0,0.5,1) , nrow=1, ncol=3, byrow=T)
+# param.sf <- matrix(c(0,0.005,0.1) , nrow=1, ncol=3, byrow=T) # All Groups having same sf
 
 # # initialize 'sf' prior differently for grouped treatments
 # if (v[[1]]==1 || v[[1]]==2 || v[[1]]==3) {
