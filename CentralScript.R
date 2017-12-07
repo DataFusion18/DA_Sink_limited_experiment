@@ -54,7 +54,7 @@ source("R/read_data_CBM.R")
 plot.model()
 
 # # Model run without LA feedback
-# result = CBM.grouping(chainLength = 3000, no.param.par.var=c(3), vol.group=list(c(1,2,3),c(4,5,6),7), with.storage=T, model.comparison=F, model.optimization=F)
+# result = CBM.grouping(chainLength = 300, no.param.par.var=c(3), vol.group=list(c(1,2,3),c(4,5,6),7), with.storage=T, model.comparison=F, model.optimization=F)
 #-------------------------------------------------------------------------------------
 
 
@@ -79,7 +79,7 @@ result.cluster <- clusterMap(cluster, CBM.grouping, with.storage=c(F,T,T,T,T,T,T
                              no.param.par.var=list(c(1,2,3),c(1,2,3),c(1,2,3),c(1,2,3),c(1,2,3),c(1,2,3),3),
          vol.group=c(list(list(c(1,2,3),c(4,5,6),7)),list(list(c(1,2,3),c(4,5,6),7)),list(list(c(1,2,3,4,5,6,7))),list(list(c(1,2,3,4,5,6),7)),
                      list(list(c(1,2,3),c(4,5,6),7)),list(c(1,2,3,4,5,6,7)),list(list(c(1,2,3),c(4,5,6),7))),
-         MoreArgs=list(chainLength=500))
+         MoreArgs=list(chainLength=3000))
 
 time_elapsed_series <- proc.time() - start # End clock
 bic.without.storage = result.cluster[[1]][[6]]

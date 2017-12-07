@@ -6,6 +6,21 @@
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+standard.error <- function(dat,na.rm=F,...){
+  if(na.rm==T){
+    dat <- subset(dat,is.na(dat)==F)
+  }
+  std <- sd(dat)
+  n <- length(dat)
+  se <- std/sqrt(n)
+  return(se)
+}
+
+#----------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------------
+
 
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
@@ -145,6 +160,7 @@ CBM.grouping <- function(chainLength, no.param.par.var, vol.group, with.storage,
       vcovProposal =  vcov # The higher the coefficient, the higher the deviations in parameter time series
       
       
+      browser()
       # Find the Prior probability density
       prior.dist = vector("list", no.var)
       for (i in 1:no.var) {
@@ -1341,6 +1357,34 @@ plot.Mroot <- function(shift.output.Mroot) {
                                                                         expression(+ (a[f] + a[w] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
                         values=cbPalette) +
     annotate("text", x = min(shift.output.Mroot$Date), y = max(shift.output.Mroot$value), size = font.size-7, label = paste(title[9])) +
+    theme_bw() +
+    theme(legend.position = c(0.2,0.7),legend.text.align = 0) +
+    theme(legend.title = element_blank()) +
+    theme(legend.key = element_blank()) +
+    theme(text = element_text(size=font.size+2)) +
+    theme(legend.key.height=unit(1,"line")) +
+    theme(axis.title.x = element_blank()) +
+    theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+}
+
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+
+
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+# This sript plots root biomass pools (Figure 6I) for various test cases 
+# with parameter shifted from potted seedling to free seedling
+plot.biomass <- function(shift.output.biomass) { 
+  ggplot() +
+    geom_line(data = shift.output.biomass, aes(x = Date, y = value, group = Case, colour=Case), size=1) +
+    geom_point(size=2) +
+    ylab(expression("Total Biomass"~"(g C "*plant^"-1"*")")) + 
+    scale_colour_manual(breaks=c("0","1","2","3","4","5","6"), labels=c("Baseline (5L)","+ Cday of FS",expression(+ R[d]~"of FS"),
+                                                                        expression(+ (a[f] + a[w] + a[r])~"of FS"),"+ Y of FS",expression(+ s[f]~"of FS"),"+ k of FS (Complete FS)"), 
+                        values=cbPalette) +
+    # annotate("text", x = min(shift.output.biomass$Date), y = max(shift.output.biomass$value), size = font.size-7, label = paste(title[9])) +
     theme_bw() +
     theme(legend.position = c(0.2,0.7),legend.text.align = 0) +
     theme(legend.title = element_blank()) +

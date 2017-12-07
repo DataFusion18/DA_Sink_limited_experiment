@@ -124,6 +124,8 @@ source("R/CBM_model_shift.R")
 plot.shift = list() 
 font.size = 12
 title = as.character(c("A","B","C","D","E","F","G","H","I"))
+# cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
+cbPalette = c("gray", "orange", "skyblue", "black", "yellow3", "#0072B2", "#D55E00")
 
 Cday.data.processed$Date = as.Date(Cday.data.processed$Date)
 Cday.set = subset(Cday.data.processed, volume %in% c(5,1000))
@@ -169,7 +171,6 @@ png("output/Figure_6_parameter_shifting.png", units="px", width=2000, height=300
 lay <- rbind(c(1,7,7),c(2,7,7),c(3,8,8),c(4,8,8),c(5,9,9),c(6,9,9))
 grid.arrange(grobs = plot.shift, layout_matrix = lay)
 dev.off()
-
 #-------------------------------------------------------------------------------------
 
 
@@ -180,7 +181,7 @@ keeps = c("variable", "value", "Case")
 mass.quantify = mass.quantify[ , keeps, drop = FALSE]
 mass.quantify = dcast( mass.quantify , variable ~ Case )
 mass.quantify = mass.quantify[1:3,]
-  
+
 mass.quantify$change.Cday = (mass.quantify[,3] - mass.quantify[,2]) / mass.quantify[,2]
 mass.quantify$change.Rd = (mass.quantify[,4] - mass.quantify[,3]) / mass.quantify[,3]
 mass.quantify$change.alloc = (mass.quantify[,5] - mass.quantify[,4]) / mass.quantify[,4]
@@ -192,6 +193,10 @@ mass.quantify = mass.quantify[,-c(2:8)]
 write.csv(mass.quantify, file = "output/final_mass_changes.csv", row.names = FALSE)
 #-------------------------------------------------------------------------------------
 
+
+#-------------------------------------------------------------------------------------
+#- Make figure for AGU presentation
+source("R/Parameter_shifting_AGU_presentation.R")
 
 #-------------------------------------------------------------------------------------
 
