@@ -135,7 +135,6 @@ plot.shift[[4]] = plot.shift[[4]] + theme(axis.title.x = element_blank(), axis.t
 plot.shift[[5]] = plot.shift[[5]] + theme(axis.title.x = element_blank(), axis.text.x = element_text(size = font.size, vjust=0.3))
 plot.shift[[6]] = plot.shift[[6]] + theme(axis.title.x = element_blank(), axis.text.x = element_text(size = font.size, vjust=0.3))
 
-  
 select_grobs <- function(lay) {
   id <- unique(c(t(lay))) 
   id[!is.na(id)]
@@ -176,5 +175,8 @@ hlay <- rbind(c(6,13,13),c(NA,13,13))
 grid.arrange(grobs = plot.shift[select_grobs(hlay)], layout_matrix = hlay)
 dev.off()
 
-
+shift.output.biomass.set = subset(shift.output.biomass, Date %in% as.Date("2013-05-21"))
+shift.output.biomass.set$attribution = (c("Baseline (5L)", "+ Cday of FS", "+ Rd of FS",
+                                                      "+ (af + aw + ar) of FS", "+ Y of FS", "+ sf of FS", "+ k of FS (Complete FS)"))
+write.csv(shift.output.biomass.set, file = "output/AGU_Figure/final_mass_changes.csv", row.names = FALSE)
 
