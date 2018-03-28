@@ -80,7 +80,7 @@ par(mfrow = c(1, 1), mar=c(5, 4, 2, 6))
 #         col = rainbow(20),legend = colnames(Ct.fraction.group), 
 #         args.legend = list(x = "topright", bty = "n", inset=c(-0.15, 0)))
 bb = barplot(as.matrix(t(Ct.fraction.group)), ylim=c(0, 107), ylab = "C Partitioning (%)", xlab = "Container size (L))",  
-             col = cbPalette[1:7],legend = c(expression(R[g]),expression(R["m,tot"]),expression(C[s]),expression(C["s,r"]),expression(C["s,w"]),expression(C["s,f"]),expression(C["t,lit"])), 
+             col = cbPalette[1:7],legend = c(expression(R[g]),expression(R["m,tot"]),expression(C[n]),expression(C["s,r"]),expression(C["s,w"]),expression(C["s,f"]),expression(C["t,lit"])), 
              args.legend = list(x = "topright", bty = "n", inset=c(-0.18, 0)))
 # text( bb, Ct.fraction.group[,1]-3, labels = round(Ct.group[,3],1), cex=.9)
 # text( bb, Ct.fraction.group[,1]+Ct.fraction.group[,2]-4, labels = round(Ct.group[,4],1), cex=.9)

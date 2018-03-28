@@ -162,8 +162,8 @@ source("R/C_partitioning.R")
 # mean(Cday.data.processed[Cday.data.processed$volume==35,3]) / mean(Cday.data.processed[Cday.data.processed$volume==15,3])
 
 #-------------------------------------------------------------------------------------
-
-
+#- Plot photosynthesis and storage relationship from the gas exchange measurements
+source("R/Asat_tnc.R")
 
 #-------------------------------------------------------------------------------------
 
