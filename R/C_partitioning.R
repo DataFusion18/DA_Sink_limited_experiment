@@ -74,12 +74,12 @@ colnames(Ct.group) <- c("GPP (g C)", "Rg (g C)", "Rm (g C)", "Cs (g C)", "Cr (g 
 Ct.group = Ct.group[,c(9,1,2,3,4,7,5,6,8)]
 write.csv(Ct.group, file = "output/C_partitioning.csv", row.names = FALSE)
 
-png("output/Figure_7_C_partitioning.png", units="px", width=1200, height=1000, res=200)
+png("output/Figure_4_C_partitioning.png", units="px", width=1200, height=1000, res=200)
 par(mfrow = c(1, 1), mar=c(5, 4, 2, 6))
 # bb = barplot(as.matrix(t(Ct.fraction.group)), ylim=c(0, 107), ylab = "C Partitioning (%)", xlab = "Treatments (Container size)",  
 #         col = rainbow(20),legend = colnames(Ct.fraction.group), 
 #         args.legend = list(x = "topright", bty = "n", inset=c(-0.15, 0)))
-bb = barplot(as.matrix(t(Ct.fraction.group)), ylim=c(0, 107), ylab = "C Partitioning (%)", xlab = "Container size (L))",  
+bb = barplot(as.matrix(t(Ct.fraction.group)), ylim=c(0, 107), ylab = "C Partitioning (%)", xlab = "Container size (L)",  
              col = cbPalette[1:7],legend = c(expression(R[g]),expression(R["m,tot"]),expression(C[n]),expression(C["s,r"]),expression(C["s,w"]),expression(C["s,f"]),expression(C["t,lit"])), 
              args.legend = list(x = "topright", bty = "n", inset=c(-0.18, 0)))
 # text( bb, Ct.fraction.group[,1]-3, labels = round(Ct.group[,3],1), cex=.9)

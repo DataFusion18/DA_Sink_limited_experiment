@@ -131,27 +131,32 @@ stopCluster(cluster)
 # result = CBM.grouping(chainLength = 3000, no.param.par.var=c(3), vol.group=list(c(1,2,3),c(4,5,6),7), with.storage=T, model.comparison=F, model.optimization=F)
 # # result = CBM.grouping(chainLength = 3000, no.param.par.var=c(3), vol.group=list(7), with.storage=T, model.comparison=F, model.optimization=F)
 # 
-# #- Make figure 4 and 5
+# #- Make figure 2 and 3
 # # This script creates the figures and saves those in "output" folder
-# # source("R/generate_figures_CBM_grouping.R")
-# # source("R/functions_CBM.R")
+# source("R/functions_CBM.R")
 plot.Modelled.parameters(result)
 plot.Modelled.biomass(result)
 #-------------------------------------------------------------------------------------
 
 
 #-------------------------------------------------------------------------------------
-#- Perform sensitivity analysis and make figure 6
+#- Perform sensitivity analysis and make figure 5
 # source("R/functions_CBM.R")
 source("R/Parameter_sensitivity_shifting_LA.R")
 #-------------------------------------------------------------------------------------
 
 
 #-------------------------------------------------------------------------------------
-# Calculate total C partitioning for individual treatments 
-# and make figure 7 and Table S1
-# source("R/functions_CBM.R")
+# Calculate total C partitioning for individual treatments and make figure 4
 source("R/C_partitioning.R")
+#-------------------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------------------
+# #- Make figure S1 and S2
+# source("R/functions_CBM.R")
+plot.Modelled.nsc(result)
+source("R/CUE_dynamics.R")
 #-------------------------------------------------------------------------------------
 
 
@@ -162,8 +167,8 @@ source("R/C_partitioning.R")
 # mean(Cday.data.processed[Cday.data.processed$volume==35,3]) / mean(Cday.data.processed[Cday.data.processed$volume==15,3])
 
 #-------------------------------------------------------------------------------------
-#- Plot photosynthesis and storage relationship from the gas exchange measurements
-source("R/Asat_tnc.R")
+# #- Plot photosynthesis and storage relationship from the gas exchange measurements
+# source("R/Asat_tnc.R")
 
 #-------------------------------------------------------------------------------------
 

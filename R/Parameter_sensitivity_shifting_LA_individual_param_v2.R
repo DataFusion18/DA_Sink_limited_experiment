@@ -22,23 +22,20 @@ names(data.set)[3:ncol(data.set)] = c("Cday","Rd","LA","LA_SD","Sleaf","Sleaf_SD
 ##################------------------------------
 # Consider everything (Cday, LA, Rd, sigma, parameters) for potted seedling 5L (group 1)
 q=0 # Case 0
-Cday.data.set = subset(Cday.data.processed,volume==5) # Consider the free seedling to test the parameter sensitivity
-Rd.data.set = subset(Rd.data.processed,volume==5)
-Mleaf.data.set = subset(Mleaf.data.processed,volume==5)
-Mstem.data.set = subset(Mstem.data.processed,volume==5)
-Mroot.data.set = subset(Mroot.data.processed,volume==5)
-Sleaf.data.set = tnc.data = subset(tnc.data.processed,volume==5)
-LA.data.set = subset(LA.data.processed,volume==5)
-
-# sigma.data.set = subset(sigma.data.processed,volume==5)
-# sla.harvest.data = subset(sla.harvest.processed,volume %in% 5)
-# sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
+Cday.data.set = subset(Cday.data.processed,volume==1000) # Consider the 5L seedling to test the parameter sensitivity
+Rd.data.set = subset(Rd.data.processed,volume==1000)
+Mleaf.data.set = subset(Mleaf.data.processed,volume==1000)
+Mstem.data.set = subset(Mstem.data.processed,volume==1000)
+Mroot.data.set = subset(Mroot.data.processed,volume==1000)
+Sleaf.data.set = tnc.data = subset(tnc.data.processed,volume==1000)
+LA.data.set = subset(LA.data.processed,volume==1000)
 sigma.data.set = subset(sigma.data.processed,volume==1000)
-sla.harvest.data = subset(sla.harvest.processed,volume %in% 5)
+
+sla.harvest.data = subset(sla.harvest.processed,volume %in% 1000)
 sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
 
 summary.param = result[[2]]
-param = subset(summary.param,(volume.group %in% 1)) # volume.group = 1 is for potted seedling 5L
+param = subset(summary.param,(volume.group %in% 3)) # volume.group = 1 is for potted seedling 5L
 # param = subset(summary.param,(volume==5)) # volume.group = 1 is for potted seedling 5L
 keeps = c("Date", "variable", "Parameter")
 param = param[ , keeps, drop = FALSE]
@@ -56,10 +53,7 @@ source("R/CBM_model_shift.R")
 # Take the Cday for free seedling
 q=1 # Case 1
 # Raw data processing for free seedling only (1000L)
-Cday.data.set = subset(Cday.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
-# sigma.data.set = subset(sigma.data.processed,volume==1000)
-# sla.harvest.data = subset(sla.harvest.processed,volume %in% 1000)
-# sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
+Cday.data.set = subset(Cday.data.processed,volume==5) # Consider the free seedling to test the parameter sensitivity
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -67,7 +61,8 @@ source("R/CBM_model_shift.R")
 ##################------------------------------
 # Take the Cday, Rd for free seedling
 q=2 # Case 2
-Rd.data.set = subset(Rd.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
+Cday.data.set = subset(Cday.data.processed,volume==1000) # Consider the 5L seedling to test the parameter sensitivity
+Rd.data.set = subset(Rd.data.processed,volume==5) # Consider the free seedling to test the parameter sensitivity
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -75,15 +70,17 @@ source("R/CBM_model_shift.R")
 ############----------------------------------------
 # Take the parameters af, as, ar for free seedling
 q=3 # Case 4
-param.pot = subset(summary.param,(volume.group %in% 1 & variable %in% c("k","Y","sf")))
-param.free = subset(summary.param,(volume.group %in% 3 & variable %in% c("af","as","ar")))
+Rd.data.set = subset(Rd.data.processed,volume==1000) # Consider the free seedling to test the parameter sensitivity
+
+param.pot = subset(summary.param,(volume.group %in% 3 & variable %in% c("k","Y","sf")))
+param.free = subset(summary.param,(volume.group %in% 1 & variable %in% c("af","as","ar")))
 param = rbind(param.pot, param.free)
 keeps = c("Date", "variable", "Parameter")
 param = param[ , keeps, drop = FALSE]
 param.casted = dcast( param , Date ~ variable )
 
-sla.harvest.data = subset(sla.harvest.processed,volume %in% 1000)
-sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
+# sla.harvest.data = subset(sla.harvest.processed,volume %in% 5)
+# sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
 
 # This sript runs the model equations for parameter shifting from potted seedling to free seedling
 source("R/CBM_model_shift.R")
@@ -91,8 +88,8 @@ source("R/CBM_model_shift.R")
 ############----------------------------------------
 # Take the parameters Y, af, as, ar for free seedling
 q=4 # Case 5
-param.pot = subset(summary.param,(volume.group %in% 1 & variable %in% c("k","sf")))
-param.free = subset(summary.param,(volume.group %in% 3 & variable %in% c("Y","af","as","ar")))
+param.pot = subset(summary.param,(volume.group %in% 3 & variable %in% c("k","sf","af","as","ar")))
+param.free = subset(summary.param,(volume.group %in% 1 & variable %in% c("Y")))
 param = rbind(param.pot, param.free)
 keeps = c("Date", "variable", "Parameter")
 param = param[ , keeps, drop = FALSE]
@@ -104,8 +101,8 @@ source("R/CBM_model_shift.R")
 ############----------------------------------------
 # Take the parameters Y, af, as, ar, sf for free seedling
 q=5 # Case 6
-param.pot = subset(summary.param,(volume.group %in% 1 & variable %in% c("k")))
-param.free = subset(summary.param,(volume.group %in% 3 & variable %in% c("Y","af","as","ar","sf")))
+param.pot = subset(summary.param,(volume.group %in% 3 & variable %in% c("Y","af","as","ar","k")))
+param.free = subset(summary.param,(volume.group %in% 1 & variable %in% c("sf")))
 param = rbind(param.pot, param.free)
 keeps = c("Date", "variable", "Parameter")
 param = param[ , keeps, drop = FALSE]
@@ -117,7 +114,10 @@ source("R/CBM_model_shift.R")
 ############----------------------------------------
 # Take the parameters Y, k, af, as, ar, sf for free seedling
 q=6 # Case 7
-param = subset(summary.param,(volume.group %in% 3)) # volume.group = 3 is for free seedling from the 3 groups
+param.pot = subset(summary.param,(volume.group %in% 3 & variable %in% c("Y","af","as","ar","sf")))
+param.free = subset(summary.param,(volume.group %in% 1 & variable %in% c("k")))
+param = rbind(param.pot, param.free)
+# param = subset(summary.param,(volume.group %in% 3)) # volume.group = 3 is for free seedling from the 3 groups
 keeps = c("Date", "variable", "Parameter")
 param = param[ , keeps, drop = FALSE]
 param.casted = dcast( param , Date ~ variable )
@@ -131,7 +131,7 @@ plot.shift = list()
 font.size = 12
 title = as.character(c("A","B","C","D","E","F","G","H","I"))
 # cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
-cbPalette = c("gray", "orange", "skyblue", "black", "yellow3", "#0072B2", "#D55E00", "#009E73", "#CC79A7")
+cbPalette = c("gray", "orange", "skyblue", "black", "yellow3", "#0072B2", "#D55E00")
 
 Cday.data.processed$Date = as.Date(Cday.data.processed$Date)
 Cday.set = subset(Cday.data.processed, volume %in% c(5,1000))
@@ -173,7 +173,7 @@ plot.shift[[8]] = plot.Mstem(shift.output.Mstem)
 shift.output.Mroot = subset(shift.output,(variable %in% "Mroot"))
 plot.shift[[9]] = plot.Mroot(shift.output.Mroot)
 
-png("output/Figure_5_parameter_shifting.png", units="px", width=2000, height=3000, res=220)
+png("output/Figure_6_parameter_shifting_individual_param_v2.png", units="px", width=2000, height=3000, res=220)
 lay <- rbind(c(1,7,7),c(2,7,7),c(3,8,8),c(4,8,8),c(5,9,9),c(6,9,9))
 grid.arrange(grobs = plot.shift, layout_matrix = lay)
 dev.off()
@@ -182,54 +182,48 @@ dev.off()
 
 #-------------------------------------------------------------------------------------
 # Quantify the changes of final biomasses
-mass.quantify = subset(shift.output, Date %in% as.Date("2013-05-21"))
+mass.quantify_v2 = subset(shift.output, Date %in% as.Date("2013-05-21"))
 keeps = c("variable", "value", "Case")
-mass.quantify = mass.quantify[ , keeps, drop = FALSE]
-mass.quantify = dcast( mass.quantify , variable ~ Case )
-mass.quantify = mass.quantify[1:3,]
-
-mass.quantify = mass.quantify[,-1]
-mass.quantify = data.frame(t(mass.quantify))
+mass.quantify_v2 = mass.quantify_v2[ , keeps, drop = FALSE]
+mass.quantify_v2 = dcast( mass.quantify_v2 , variable ~ Case )
+mass.quantify_v2 = mass.quantify_v2[1:3,]
+mass.quantify_v2 = mass.quantify_v2[,-1]
+mass.quantify_v2 = data.frame(t(mass.quantify_v2))
 # mass.quantify = mass.quantify[-1,]
-rownames(mass.quantify) = c("5L", "Cday", "Rd", "allocations", "Y", "sf", "k")
-names(mass.quantify) = c("Ct,f", "Ct,w", "Ct,r")
+rownames(mass.quantify_v2) = c("FS", "Cday", "Rd", "allocations", "Y", "sf", "k")
+names(mass.quantify_v2) = c("Ct,f", "Ct,w", "Ct,r")
 
-# for (i in 2:7) {
-#   mass.quantify[i,] = mass.quantify[i,] - mass.quantify[1,]
-# }
-# mass.quantify[8,] = colSums(mass.quantify)
-mass.quantify[,4] = rowSums(mass.quantify)
-# rownames(mass.quantify)[8] = "Total"
-names(mass.quantify)[4] = "Ct"
-mass.quantify[,5] = mass.quantify[,4]
-for (i in 7:2) {
-   mass.quantify[i,5] = mass.quantify[i,5] - mass.quantify[(i-1),5]
+for (i in 2:7) {
+  mass.quantify_v2[i,] = mass.quantify_v2[i,] - mass.quantify_v2[1,]
 }
+mass.quantify_v2[8,] = colSums(mass.quantify_v2)
+mass.quantify_v2[,4] = rowSums(mass.quantify_v2)
+rownames(mass.quantify_v2)[8] = "Total"
+names(mass.quantify_v2)[4] = "Ct"
 
-# mass.quantify$change.Cday = (mass.quantify[,3] - mass.quantify[,2])
-# mass.quantify$change.Rd = (mass.quantify[,4] - mass.quantify[,2])
-# mass.quantify$change.alloc = (mass.quantify[,5] - mass.quantify[,2])
-# mass.quantify$change.Y = (mass.quantify[,6] - mass.quantify[,2])
-# mass.quantify$change.sf = (mass.quantify[,7] - mass.quantify[,2])
-# mass.quantify$change.k = (mass.quantify[,8] - mass.quantify[,2])
-# 
-# mass.quantify$change.Cday = (mass.quantify[,3] - mass.quantify[,2]) / mass.quantify[,2]
-# mass.quantify$change.Rd = (mass.quantify[,4] - mass.quantify[,3]) / mass.quantify[,3]
-# mass.quantify$change.alloc = (mass.quantify[,5] - mass.quantify[,4]) / mass.quantify[,4]
-# mass.quantify$change.Y = (mass.quantify[,6] - mass.quantify[,5]) / mass.quantify[,5]
-# mass.quantify$change.sf = (mass.quantify[,7] - mass.quantify[,6]) / mass.quantify[,6]
-# mass.quantify$change.k = (mass.quantify[,8] - mass.quantify[,7]) / mass.quantify[,7]
-# mass.quantify$total = rowSums(mass.quantify[,c(2,9:14)])
-# mass.quantify[4,c(2:8)] = colSums(mass.quantify[,c(2:8)])
+#-------------------------------------------------------------------------------------
+q=0 # Case 8
+Cday.data.set = subset(Cday.data.processed,volume==5)
+Rd.data.set = subset(Rd.data.processed,volume==5)
+param = subset(summary.param,(volume.group %in% 1)) # volume.group = 3 is for free seedling from the 3 groups
+keeps = c("Date", "variable", "Parameter")
+param = param[ , keeps, drop = FALSE]
+param.casted = dcast( param , Date ~ variable )
+sla.harvest.data = subset(sla.harvest.processed,volume %in% 5)
+sigma.data.set$SLA = sla.harvest.data$sla_no_tnc
+
+# This sript runs the model equations for parameter shifting from potted seedling to free seedling
+source("R/CBM_model_shift.R")
+
+mass.quantify_v2[9,c(1:3)] = subset(shift.output, Date %in% as.Date("2013-05-21") & Case %in% q & variable %in% as.factor(c("Mleaf","Mstem","Mroot")))$value
+rownames(mass.quantify_v2)[9] = "5L"
+mass.quantify_v2[9,4] = sum(mass.quantify_v2[9,c(1:3)])
+mass.quantify_v2[10,] = mass.quantify_v2[9,] - mass.quantify_v2[8,]
+rownames(mass.quantify_v2)[10] = "Interactions"
+
+#-------------------------------------------------------------------------------------
 
 # mass.quantify = mass.quantify[,-c(2:8)]
-write.csv(mass.quantify, file = "output/final_mass_changes.csv", row.names = FALSE)
-#-------------------------------------------------------------------------------------
-
-
-#-------------------------------------------------------------------------------------
-#- Make figure for AGU presentation
-source("R/Parameter_shifting_AGU_presentation.R")
-
+write.csv(mass.quantify_v2, file = "output/final_mass_changes_individual_param_v2.csv", row.names = FALSE)
 #-------------------------------------------------------------------------------------
 

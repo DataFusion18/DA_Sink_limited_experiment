@@ -43,8 +43,8 @@ tnc.analysis <- function(carbohydrates,harvest) {
   stem.tnc = subset(carbohydrates,Organ == "Stem") # Unit = % of dry weight stemmass
   root.tnc = subset(carbohydrates,Organ == "Root") # Unit = % of dry weight rootmass
   
-  tnc = data.frame(harvest$LeafDW,leaf.tnc$tnc,harvest$StemDW,stem.tnc$tnc,harvest$RootDW,root.tnc$tnc)
-  names(tnc) <- c("leaf.C","leaf.tnc.C","stem.C","stem.tnc.C","root.C","root.tnc.C") 
+  tnc = data.frame(harvest$Date,harvest$LeafDW,leaf.tnc$tnc,harvest$StemDW,stem.tnc$tnc,harvest$RootDW,root.tnc$tnc)
+  names(tnc) <- c("Date","leaf.C","leaf.tnc.C","stem.C","stem.tnc.C","root.C","root.tnc.C") 
   
   tnc$total.leaf.tnc.C = tnc$leaf.tnc.C * tnc$leaf.C / 100 # Unit = gC
   tnc$total.stem.tnc.C = tnc$stem.tnc.C * tnc$stem.C / 100 # Unit = gC
@@ -54,6 +54,43 @@ tnc.analysis <- function(carbohydrates,harvest) {
   tnc$stem_to_all = tnc$total.stem.tnc.C / (tnc$total.leaf.tnc.C + tnc$total.stem.tnc.C + tnc$total.root.tnc.C) * 100 # Unit = %
   tnc$root_to_all = tnc$total.root.tnc.C / (tnc$total.leaf.tnc.C + tnc$total.stem.tnc.C + tnc$total.root.tnc.C) * 100 # Unit = %
   
+  tnc.melt1 <- melt(tnc[c("Date","leaf.tnc.C","stem.tnc.C","root.tnc.C")], id.vars = "Date")
+  tnc.melt1$Type = as.factor("Concentration")
+  tnc.melt2 <- melt(tnc[c("Date","leaf_to_all","stem_to_all","root_to_all")], id.vars = "Date")
+  tnc.melt2$Type = as.factor("Total mass")
+  tnc.melt <- rbind(tnc.melt1,tnc.melt2)
+  
+  tnc.melt$Date <- parse_date_time(tnc.melt$Date,"d m y")
+  tnc.melt$Date = as.Date(tnc.melt$Date, format = "%Y/%m/%d")
+  plots = list()
+  pd <- position_dodge(0)
+  plots[[1]] = ggplot(tnc.melt, aes(x=Date, y=value, group = interaction(as.factor(variable),as.factor(Type)), colour=as.factor(variable), shape=as.factor(Type))) + 
+    geom_point(position=pd) +
+    # geom_errorbar(position=pd, aes(ymin=litterrate-litterrate_SE, ymax=litterrate+litterrate_SE), colour="grey", width=2) +
+    geom_smooth(method='lm', se = FALSE) +
+    # geom_ribbon(data = data.biomass, aes(ymin=WM-WM_SE, ymax=WM+WM_SE), linetype=2, alpha=0.1,size=0.1) +
+    # geom_line(data = data.biomass, aes(x = Date, y = WM, group = interaction(T_treatment,chamber_type), colour=T_treatment, linetype=chamber_type)) +
+    # geom_hline(yintercept = 900) + ylab("Plant Height (cm)") +
+    ylab("NSC") +
+    # scale_x_date(date_labels="%b %y",date_breaks  ="1 week",limits = c(min(tnc.melt$Date), max(tnc.melt$Date))) +
+    labs(colour="Organs",shape="NSC") +
+    scale_colour_manual(breaks=c("leaf.tnc.C","stem.tnc.C","root.tnc.C","leaf_to_all","stem_to_all","root_to_all"), labels=c("Leaf NSC concentration","Wood NSC concentration","Root NSC concentration","Leaf total NSC (%)","Wood total NSC (%)","Root total NSC (%)"), values = c("blue","green","red","cyan4","greenyellow","orange")) +
+    # annotate("text", x = mean(lm.litter$Date), y = 915, size = font.size-7, label = paste("Chamber Height 9m line")) +
+    theme_bw() +
+    theme(legend.title = element_text(colour="black", size=font.size)) +
+    theme(legend.text = element_text(colour="black", size = font.size)) +
+    theme(legend.position = c(0.3,0.5), legend.box = "horizontal") + theme(legend.key.height=unit(1,"line")) +
+    theme(legend.key = element_blank()) +
+    theme(text = element_text(size=font.size)) +
+    # theme(axis.text.x = element_text(angle=0, hjust = 0)) +
+    theme(axis.title.x = element_blank()) +
+    theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+  
+  png("output/tnc_concentration_over_time.png", units="px", width=1200, height=800, res=150)
+  do.call(grid.arrange,  plots)
+  dev.off()
+
   tnc[nrow(tnc)+1, ] = colMeans(tnc, na.rm = TRUE) # R7 = Average of data
   tnc[nrow(tnc)+1, ] = apply(tnc, 2, sd) # R8 = Standard deviation of data
   dimnames(tnc)[[1]] <- c(1:6, "mean", "SD")
@@ -933,7 +970,7 @@ plot.Modelled.parameters <- function(result) {
         plot[[i]] = plot[[i]] + ylab(expression(a[w])) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
       }
       if (p==5) {
-        plot[[i]] = plot[[i]] + ylab(expression(a[r])) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
+        plot[[i]] = plot[[i]] + ylab(expression(paste(a[r],' = 1 - ',a[f],' - ',a[w]))) + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 1), units="line"))
       }
       if (p==6) {
         plot[[i]] = plot[[i]] + ylab(expression(s[f]~"(g C "*g^"-1"*" C "*d^"-1"*")"))
@@ -941,7 +978,7 @@ plot.Modelled.parameters <- function(result) {
     }
   }
   
-  png("output/Figure_4_modelled_parameters.png", units="px", width=2000, height=2000, res=250)
+  png("output/Figure_3_modelled_parameters.png", units="px", width=2000, height=2000, res=250)
   print (do.call(grid.arrange,  plot))
   dev.off()
 }
@@ -956,7 +993,7 @@ plot.Modelled.parameters <- function(result) {
 ################ Figure 5 #####################
 # Plot Daily analysis (lines) with optimum parameter setting and intermittent observations (symbols) of selected carbon stocks
 #-------------------------------------------------------------------------------------
-plot.Modelled.biomass <- function(result) { 
+plot.Modelled.biomass <- function(result) {
   cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
   i = 0
   font.size = 12
@@ -966,9 +1003,9 @@ plot.Modelled.biomass <- function(result) {
   summary.data = result[[3]]
   summary.output = result[[4]]
   summary.error = result[[5]]
-  meas = as.factor(c("Mleaf","Mstem","Mroot","Sleaf"))
-  res = as.factor(c("Mleaf.modelled","Mstem.modelled","Mroot.modelled","Sleaf.modelled"))
-  error = as.factor(c("Mleaf_SD","Mstem_SD","Mroot_SD","Sleaf_SD"))
+  meas = as.factor(c("Mleaf","Mstem","Mroot"))
+  res = as.factor(c("Mleaf.modelled","Mstem.modelled","Mroot.modelled"))
+  error = as.factor(c("Mleaf_SD","Mstem_SD","Mroot_SD"))
   title = as.character(c("A","B","C","D"))
   pd <- position_dodge(2) # move the overlapped errorbars horizontally
   for (p in 1:length(meas)) {
@@ -976,13 +1013,12 @@ plot.Modelled.biomass <- function(result) {
     summary.output.Cpool = subset(summary.output,variable %in% res[p])
     summary.error.Cpool = subset(summary.error,variable %in% error[p])
     
-    i = i + 1
-    plot[[i]] = ggplot(summary.error.Cpool, aes(x=Date, y=parameter, group = volume, colour=volume)) + 
+    plot[[p]] = ggplot(summary.error.Cpool, aes(x=Date, y=parameter, group = volume, colour=volume)) + 
       geom_point(position=pd) +
       geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=2) +
       # geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = interaction(volume,volume.group,no.param), linetype=volume.group, colour=volume, size=no.param)) +
       # geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = interaction(volume,no.param), linetype=no.param, colour=volume)) +
-      geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = volume, colour=volume)) +
+      geom_line(position=pd,size=0.4,data = summary.output.Cpool, aes(x = Date, y = value, group = volume, colour=volume)) +
       ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
       # ggtitle("C pools - Measured (points) vs Modelled (lines)") +
       # labs(colour="Soil Volume", linetype="Grouping treatment", size="Total No of Parameter") +
@@ -992,7 +1028,6 @@ plot.Modelled.biomass <- function(result) {
       # scale_color_manual(labels = c("Individuals", "One Group"), values = c("blue", "red")) +
       # coord_trans(y = "log10") + ylab(paste(as.character(meas[p]),"(g C plant-1)")) +
       theme_bw() +
-      annotate("text", x = max(summary.output.Cpool$Date), y = min(summary.output.Cpool$value), size = font.size-7, label = paste(title[p])) +
       # theme(plot.title = element_text(size = 20, face = "bold")) +
       theme(legend.title = element_text(colour="black", size=font.size)) +
       theme(legend.text = element_text(colour="black", size = font.size-1)) +
@@ -1005,96 +1040,72 @@ plot.Modelled.biomass <- function(result) {
       # theme(plot.title = element_text(hjust = 0)) +
       theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
     
+    if (p<=3) {
+      plot[[p]] = plot[[p]] + annotate("text", x = max(summary.output.Cpool$Date), y = min(summary.output.Cpool$value), size = font.size-7, label = paste(title[p]))
+    }
+    
     if (p==1) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,f"]~"(g C "*plant^"-1"*")")) +
+      plot[[p]] = plot[[p]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,f"]~"(g C "*plant^"-1"*")")) +
         scale_colour_manual(name="Treatments", breaks=c("5","10","15","20","25","35","1000"),
                               labels=c("5 L", "10 L", "15 L", "20 L", "25 L", "35 L", "FS"), values=cbPalette[1:7])
-      plot[[i]] = plot[[i]]  + theme(legend.key.height=unit(0.7,"line"))
-      
+      plot[[p]] = plot[[p]]  + theme(legend.key.height=unit(0.7,"line"))
+      plot[[p]] = plot[[p]] + annotate("text", x = mean(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-8, label = paste("Foliage"))
     } else if (p==2) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,w"]~"(g C "*plant^"-1"*")"))
-      plot[[i]] = plot[[i]] + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 0.75), units="line"))
-    } else if (p==3) {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.5,1,2,5,10,20,40),labels=c(.5,1,2,5,10,20,40)) + ylab(expression(C["t,r"]~"(g C "*plant^"-1"*")"))
+      plot[[p]] = plot[[p]] + scale_y_log10(breaks=c(.5,1,2,5,10,20),labels=c(.5,1,2,5,10,20)) + ylab(expression(C["t,w"]~"(g C "*plant^"-1"*")"))
+      plot[[p]] = plot[[p]] + theme(plot.margin=unit(c(0.4, 0.4, 0.4, 0.75), units="line"))
+      plot[[p]] = plot[[p]] + annotate("text", x = mean(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-8, label = paste("Wood"))
     } else {
-      plot[[i]] = plot[[i]] + scale_y_log10(breaks=c(.05,.1,.2,.5,1,2),labels=c(.05,.1,.2,.5,1,2)) + ylab(expression(C["n,f"]~"(g C "*plant^"-1"*")"))
+      plot[[p]] = plot[[p]] + scale_y_log10(breaks=c(.5,1,2,5,10,20,40),labels=c(.5,1,2,5,10,20,40)) + ylab(expression(C["t,r"]~"(g C "*plant^"-1"*")"))
+      plot[[p]] = plot[[p]] + annotate("text", x = mean(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-8, label = paste("Root"))
     }
     if (p>1) {
-      plot[[i]] = plot[[i]] + guides(colour=FALSE)
+      plot[[p]] = plot[[p]] + guides(colour=FALSE)
     }
-    
-    # #----------------------------------------------------------------------------------------------------------------
-    # # keeps <- c("Date", "volume", "tnc.conc", "tnc.conc_SE")
-    # # tnc.data = tnc.data.processed[ , keeps, drop = FALSE]
-    # 
-    # if (p == 4) {
-    #   plot[[i]] = ggplot(summary.error.Cpool, aes(x=Date, y=parameter, group = volume, colour=volume)) +
-    #     geom_point(position=pd) +
-    #     geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=2) +
-    #     geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = volume, colour=volume)) +
-    #     ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
-    #     labs(colour="Pot Volume (L)") +
-    #     theme_bw() +
-    #     annotate("text", x = min(summary.output.Cpool$Date), y = max(summary.output.Cpool$value), size = font.size-7, label = paste(title[p])) +
-    #     theme(legend.title = element_text(colour="black", size=font.size)) +
-    #     theme(legend.text = element_text(colour="black", size = font.size)) +
-    #     theme(legend.position = c(0.17,0.7)) +
-    #     theme(legend.key = element_blank()) +
-    #     theme(text = element_text(size=font.size)) +
-    #     theme(axis.title.x = element_blank()) +
-    #     theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
-    #     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-    #     ylab(expression(S[leaf]~"(% of"~M[leaf]~")")) + guides(colour=FALSE)
-    # }
-    # #----------------------------------------------------------------------------------------------------------------
-    
   }
   
-  png("output/Figure_5_modelled_biomass.png", units="px", width=1600, height=1300, res=220)
+  # #----------------------------------------------------------------------------------------------------------------
+  # # Represent Sleaf as a concentration of Mleaf instead of total mass
+    summary.output.Mleaf = subset(summary.output,variable %in% "Mleaf.modelled")
+    summary.output.Sleaf = subset(summary.output,variable %in% "Sleaf.modelled")
+    summary.error.Sleaf = subset(summary.error,variable %in% "Sleaf_SD")
+    summary.output.Sleaf$value = summary.output.Sleaf$value / summary.output.Mleaf$value
+    summary.output.Sleaf = summary.output.Sleaf[,-c(5,6)]
+
+    # summary.error.Sleaf$value = summary.error.Sleaf$value / lm.daily.m$leafmass * 100
+    leafmass.daily = read.csv("processed_data/Cleaf_daily_data.csv") # Unit gC per gC plant
+    leafmass.daily = leafmass.daily[with(leafmass.daily, order(volume,Date)), ]
+    summary.error.Sleaf$value = ((summary.error.Sleaf$value*summary.error.Sleaf$value + leafmass.daily$leafmass_SE*leafmass.daily$leafmass_SE)/2)^0.5 / lm.daily.m$leafmass
+    summary.error.Sleaf$parameter = summary.error.Sleaf$parameter / lm.daily.m$leafmass
+    summary.error.Sleaf = summary.error.Sleaf[,-c(6,7)]
+
+    # pd <- position_dodge(2) # move the overlapped errorbars horizontally
+    p=4
+    plot[[p]] = ggplot(summary.error.Sleaf, aes(x=Date, y=parameter, group = volume, colour=volume)) +
+      geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=0.1) +
+      geom_line(position=pd,size=0.4,data = summary.output.Sleaf, aes(x = Date, y = value, group = volume, colour=volume)) +
+      geom_point(position=pd) +
+      # ylab("Sleaf (g C)") + xlab("Month") +
+      # ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
+      labs(colour="Pot Volume (L)") +
+      scale_color_manual(breaks=c("5","10","15","20","25","35","1000"), values=cbPalette[1:7]) +
+      theme_bw() +
+      annotate("text", x = max(summary.output.Sleaf$Date), y = min(summary.output.Sleaf$value)+0.002, size = font.size-7, label = paste(title[p])) +
+      annotate("text", x = mean(summary.output.Cpool$Date), y = max(summary.output.Sleaf$value), size = font.size-8, label = paste("Foliage NSC concentration")) +
+      theme(legend.title = element_text(colour="black", size=font.size)) +
+      theme(legend.text = element_text(colour="black", size = font.size)) +
+      theme(legend.position = c(0.17,0.7)) +
+      theme(legend.key = element_blank(), plot.margin=unit(c(0.25, 0.4, 0.25, 0.5), units="line")) +
+      theme(text = element_text(size=font.size)) +
+      theme(axis.title.x = element_blank()) +
+      theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+      theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+      scale_y_log10(breaks=c(.05,.1,.15,.2,.25),labels=c(0.05,0.1,0.15,0.2,0.25)) + 
+      ylab(expression(C["n,f"]/C["t,f"]~"(fraction)")) + guides(colour=FALSE)
+
+  png("output/Figure_2_modelled_biomass.png", units="px", width=1600, height=1300, res=220)
   print (do.call(grid.arrange,  plot))
   dev.off()
-  
-  # # #----------------------------------------------------------------------------------------------------------------
-  # # # Represent Sleaf as a concentration of Mleaf instead of total mass
-  # if (p == 4) {
-  #   summary.output.Mleaf = subset(summary.output,variable %in% "Mleaf.modelled")
-  #   summary.output.Sleaf = subset(summary.output,variable %in% "Sleaf.modelled")
-  #   summary.error.Sleaf = subset(summary.error,variable %in% "Sleaf_SD")
-  #   summary.output.Sleaf$value = summary.output.Sleaf$value / summary.output.Mleaf$value * 100
-  #   summary.output.Sleaf = summary.output.Sleaf[,-c(5,6)]
-  #   
-  #   # summary.error.Sleaf$value = summary.error.Sleaf$value / lm.daily.m$leafmass * 100
-  #   leafmass.daily = read.csv("processed_data/Cleaf_daily_data.csv") # Unit gC per gC plant
-  #   leafmass.daily = leafmass.daily[with(leafmass.daily, order(volume,Date)), ]
-  #   summary.error.Sleaf$value = ((summary.error.Sleaf$value*summary.error.Sleaf$value + leafmass.daily$leafmass_SE*leafmass.daily$leafmass_SE)/2)^0.5 / lm.daily.m$leafmass * 100
-  #   summary.error.Sleaf$parameter = summary.error.Sleaf$parameter / lm.daily.m$leafmass * 100
-  #   summary.error.Sleaf = summary.error.Sleaf[,-c(6,7)]
-  #   
-  #   pd <- position_dodge(4) # move the overlapped errorbars horizontally
-  #   plot[[i]] = ggplot(summary.error.Sleaf, aes(x=Date, y=parameter, group = volume, colour=volume)) +
-  #     geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=0.2) +
-  #     geom_line(position=pd,data = summary.output.Sleaf, aes(x = Date, y = value, group = volume, colour=volume)) +
-  #     geom_point(position=pd) +
-  #     # ylab("Sleaf (g C)") + xlab("Month") +
-  #     ylab(paste(as.character(meas[p]),"(g C)")) + xlab("Month") +
-  #     labs(colour="Pot Volume (L)") +
-  #     theme_bw() +
-  #     annotate("text", x = min(summary.output.Sleaf$Date), y = max(summary.output.Sleaf$value), size = font.size-7, label = paste(title[p])) +
-  #     theme(legend.title = element_text(colour="black", size=font.size)) +
-  #     theme(legend.text = element_text(colour="black", size = font.size)) +
-  #     theme(legend.position = c(0.17,0.7)) +
-  #     theme(legend.key = element_blank()) +
-  #     theme(text = element_text(size=font.size)) +
-  #     theme(axis.title.x = element_blank()) +
-  #     theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
-  #     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-  #     ylab(expression(S[leaf]~"(% of"~M[leaf]~")")) + guides(colour=FALSE)
-  # }
-  # 
-  # png("output/Figure_5_modelled_biomass_Sleaf_conc.png", units="px", width=2200, height=1600, res=220)
-  # print (do.call(grid.arrange,  plot))
-  # dev.off()
-  # # #----------------------------------------------------------------------------------------------------------------
+  # #----------------------------------------------------------------------------------------------------------------
   
 }
 
@@ -1113,7 +1124,7 @@ plot.Cday <- function(Cday.set, iteration) {
     geom_point(size=0.01) +
     geom_line(data = Cday.set, aes(x = Date, y = carbon_day,  group = volume, colour=factor(volume))) +
     ylab(expression(C[day]~"(g C "*d^"-1"*" "*leafarea^"-1"*")")) +
-    scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[1:2]) +
+    scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     annotate("text", x = min(Cday.set$Date), y = max(Cday.set$carbon_day)*0.98, size = font.size-7, label = paste(title[1])) +
     theme_bw() +
     theme(legend.position = c(0.85,0.85)) +
@@ -1142,7 +1153,7 @@ plot.Rd <- function(Rd.set, iteration) {
     # xlab("Month") +
     ylab(expression(R[d]~"(g C "*g^"-1"*" plant "*d^"-1"*")")) + 
     # ggtitle("B - Case 2: Rd (5L pot -> Free)") +
-    scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[2:3]) +
+    scale_colour_manual(name="", breaks=c("5", "1000"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     # scale_y_continuous(limits = c(min(summary.param.set$Parameter), max(summary.param.set$Parameter)), breaks=c(.005,.01,.015),labels=c(.005,.01,.015)) +
     annotate("text", x = min(Rd.set$Date), y = max(Rd.set$Rd_daily)*0.98, size = font.size-7, label = paste(title[2])) +
     theme_bw() +
@@ -1173,7 +1184,8 @@ plot.allocation.fractions <- function(summary.param.set, iteration) {
     geom_line(data = summary.param.set, aes(x = Date, y = Parameter,  group = interaction(volume.group,variable), colour=factor(volume.group), linetype=factor(variable))) +
     # xlab("Month") +
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
-    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    # scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     # scale_linetype_manual(values=c("solid","dashes", "dotted")) +
     scale_linetype_manual(breaks=c("af","as","ar"), labels=c(expression(a[f]),expression(a[w]),expression(a[r])),values=c(19,17,15)) +
     scale_y_continuous(name=expression(Allocations~"(g C "*g^"-1"*" C "*d^"-1"*")"),limits = c(0,0.9), breaks=seq(0,1,0.2)) +
@@ -1205,7 +1217,7 @@ plot.Y <- function(summary.param.set, iteration) {
     # geom_line(data = summary.param.set, aes(x = Date, y = Parameter,  group = volume, colour=factor(volume))) +
     # xlab("Month") +
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
-    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05)) +
     annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter)*1.04, size = font.size-7, label = paste(title[iteration])) +
     ylab(expression(Y~"(g C "*g^"-1"*" C "*d^"-1"*")")) +
@@ -1236,7 +1248,7 @@ plot.sf <- function(summary.param.set, iteration) {
     # geom_line(data = summary.param.set, aes(x = Date, y = Parameter,  group = volume, colour=factor(volume))) +
     # xlab("Month") +
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
-    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     # scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05), breaks=c(.005,.007,.009),labels=c(.005,.007,.009)) +
     scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05)) +
     annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter)*1.04, size = font.size-7, label = paste(title[iteration])) +
@@ -1268,7 +1280,7 @@ plot.k <- function(summary.param.set, iteration) {
     # geom_line(data = summary.param.set, aes(x = Date, y = Parameter,  group = volume, colour=factor(volume))) +
     # xlab("Month") +
     # ggtitle(paste(title[p],"- Case",iteration,":",as.character(var[p]),"(5L pot -> Free)")) +
-    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[iteration:(iteration+1)]) +
+    scale_colour_manual(breaks=c("1", "3"), labels=c("5L", "FS"), values=cbPalette[8:9]) +
     scale_y_continuous(limits = c(min(summary.param.set$Parameter)*0.95, max(summary.param.set$Parameter)*1.05)) +
     annotate("text", x = min(summary.param.set$Date), y = max(summary.param.set$Parameter)*1.04, size = font.size-7, label = paste(title[iteration])) +
     ylab(expression(k~"(g C "*g^"-1"*" C "*d^"-1"*")")) +
@@ -1539,6 +1551,54 @@ plot.biomass <- function(shift.output.biomass) {
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
 
+
+#----------------------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------------------
+
+################ Figure S1 #####################
+# Modelled total C mass in foliage NSC Cn,f (lines) with optimum parameter settings and corresponding observations (symbols)
+#-------------------------------------------------------------------------------------
+plot.Modelled.nsc <- function(result) {
+  cbPalette = c("gray", "orange", "skyblue", "green3", "yellow3", "#0072B2", "#D55E00")
+  i = 0
+  font.size = 11
+  plot = list() 
+  no.param.par.var = result[[1]]
+  summary.param = result[[2]]
+  summary.data = result[[3]]
+  summary.output = result[[4]]
+  summary.error = result[[5]]
+  pd <- position_dodge(2) # move the overlapped errorbars horizontally
+  summary.data.Cpool = subset(summary.data,variable %in% as.factor("Sleaf"))
+  summary.output.Cpool = subset(summary.output,variable %in% as.factor("Sleaf.modelled"))
+  summary.error.Cpool = subset(summary.error,variable %in% as.factor("Sleaf_SD"))
+  
+  p.nsc = ggplot(summary.error.Cpool, aes(x=Date, y=parameter, group = volume, colour=volume)) + 
+    geom_point(position=pd) +
+    geom_errorbar(position=pd,aes(ymin=parameter-value, ymax=parameter+value), colour="grey", width=2) +
+    geom_line(position=pd,data = summary.output.Cpool, aes(x = Date, y = value, group = volume, colour=volume)) +
+    labs(colour="Pot Volume (L)") +
+    scale_color_manual(breaks=c("5","10","15","20","25","35","1000"), values=cbPalette[1:7]) +
+    scale_colour_manual(name="Treatments", breaks=c("5","10","15","20","25","35","1000"),
+                        labels=c("5 L", "10 L", "15 L", "20 L", "25 L", "35 L", "FS"), values=cbPalette[1:7]) + 
+    scale_y_log10(breaks=c(.05,.1,.2,.5,1,2),labels=c(.05,.1,.2,.5,1,2)) + 
+    ylab(expression(C["n,f"]~"(g C "*plant^"-1"*")")) +
+    theme_bw() +
+    theme(legend.title = element_text(colour="black", size=font.size)) +
+    theme(legend.text = element_text(colour="black", size = font.size-1)) +
+    theme(legend.key.height=unit(0.8,"line")) +
+    theme(legend.position = c(0.15,0.8)) +
+    theme(legend.key = element_blank()) +
+    theme(text = element_text(size=font.size)) +
+    theme(axis.title.x = element_blank()) +
+    theme(axis.title.y = element_text(size = font.size, vjust=0.3)) +
+    # theme(plot.title = element_text(hjust = 0)) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) 
+  
+  p.nsc
+  dev.copy(device = png, filename = 'output/Figure_S1_modelled_NSC.png', width = 600, height = 500, res=120) 
+  dev.off()
+}
 
 #----------------------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------------------
